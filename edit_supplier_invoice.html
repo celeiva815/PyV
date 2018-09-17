@@ -1,0 +1,63 @@
+<!DOCTYPE html> 
+<!-- styles --> 
+<?!=HtmlService.createHtmlOutputFromFile('styles.css').getContent();?> 
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+
+<div class="content"> 
+    <div class ="block">
+       <div class="three_columns">
+        <form action="javascript:searchInvoiceProducts()">
+        <label for="code">Ingrese el número de la factura:</label>
+        <input id="invoice_id" type="number"/>
+        <input type="submit" value="Buscar"/>
+        </form> 
+        
+        <br>
+        <label for="code">Fecha:</label>
+        <input id="invoice_date" class="current_date" type="date"/>
+        <br>
+        <label for="code">Tienda de Destino</label>
+            <select id="suppliers">
+                 <?!=getActiveSuppliers().map(function(d) 
+                     { return "<option value='"+d[1]+"'>"+d[1]+"</option>"; }).join('\n');?> 
+            </select> 
+        </div>
+        <div class="three_columns">
+            <h2>Total productos: <span id="total_products">$0.00</span></h2>
+            <h2>Total flete: <span id="total_shipping">$0.00</span></h2>
+            <h2>Total factura: <span id="total_invoice">$0.00</span></h2>
+            </div>
+        <div class="three_columns">
+        <h2>Artículos Agregados: <span id="selected_products_count">0</span></h2>
+            <button id="edit_waybill_button" class="process_button" type="button" onclick="this.disabled=true;">Editar Factura de Compra</button>
+            <img id="spinner" src="https://drive.google.com/uc?export=download&amp;id=1d1UkmZaPE_r37hGwCdxtodrgbEfFm12W" style="width: 50px; position: absolute;">
+        </div>
+    </div>
+    <div class="block"> 
+         <h2>Productos en Factura</h2>
+         <input type="text" id="filter_second_table" class="filter_input" onkeyup="filterSecondTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
+         <table id="selected_products_table" class="table table-hover row-clickable">
+         <thead>
+             <tr>
+                 <th>Id</th>
+                 <th width="30%">Artículo</th>
+                 <th>Tamaño</th> 
+                 <th>Stock</th>
+                 <th>Costo unitario</th>
+                 <th>% Flete</th>
+                 <th>Nuevo Stock</th>
+                 <th>Nuevo Costo</th>
+                 <th>Total Costo</th>
+                 <th>Nuevo % Flete</th>
+                 <th>Total Flete</th>
+             </tr>
+             </thead>
+             <tbody>
+             </tbody>
+         </table>
+    </div>
+</div> 
+<!-- javascript. --> <?!=HtmlService.createHtmlOutputFromFile('main.js').getContent();?>
+<!-- javascript. --> <?!=HtmlService.createHtmlOutputFromFile('editSupplierInvoice.js').getContent();?>
+
+

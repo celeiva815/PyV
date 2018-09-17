@@ -1,0 +1,70 @@
+<script>  
+    
+    function setBackground(){
+            
+            if ($(this).hasClass('selected')) {
+            
+                $(this).removeClass('selected');
+            } else {
+            
+            
+                $(this).addClass('selected').siblings().removeClass('selected');    
+                var value=$(this).find('td:first').html();
+                console.log(value);           
+            }
+    }
+  
+  /**
+  * Filters the products table by name
+  */
+  function filterTable() {
+    var input, filter, table, tr, td, idtd, i;
+    input = document.getElementById("filter_table");
+    filter = input.value.toUpperCase();
+    table = document.getElementById("products_table");
+    tr = table.getElementsByTagName("tr");
+    for (i = 0; i < tr.length; i++) {
+    
+      idtd = tr[i].getElementsByTagName("td")[0];
+      td = tr[i].getElementsByTagName("td")[1];
+      
+      if (td) {
+      
+        if (td.innerHTML.toUpperCase().indexOf(filter) > -1 || idtd.innerHTML.toUpperCase() == filter) {
+          tr[i].style.display = "";
+        
+        } else {
+          tr[i].style.display = "none";
+        }
+      }        
+    }
+  }
+  
+  /**
+  * Filters the selected products table by name
+  */
+  function filterSecondTable() {
+  var input, filter, table, tr, td, idtd, i;
+  input = document.getElementById("filter_second_table");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("selected_products_table");
+  tr = table.getElementsByTagName("tr");
+  
+  for (i = 0; i < tr.length; i++) {
+  
+    idtd = tr[i].getElementsByTagName("td")[0];
+    td = tr[i].getElementsByTagName("td")[1];
+    
+    if (td) {
+      if (td.innerHTML.toUpperCase().indexOf(filter) > -1 || idtd.innerHTML.toUpperCase() == filter) {
+        tr[i].style.display = "";
+        
+      } else {
+        tr[i].style.display = "none";
+      }
+    }       
+  }
+}
+
+
+</script>

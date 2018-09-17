@@ -1,0 +1,388 @@
+<script> 
+	
+    
+    $(document).ready(function() {
+    
+        $("#chargeback_reason").hide(); 
+        
+        // set the events for the radio button
+        $('input[type=radio][name=bill]').change(function () {
+            if (this.value == 'invoice') {
+                $("#chargeback_reason").hide();             
+            }
+            if (this.value == 'receipt') {
+                $("#chargeback_reason").hide();
+            }
+            if (this.value == 'chargeback') {
+                $("#chargeback_reason").show();
+            }
+        });
+        
+        $("#edit_receipt_or_invoice_button").click(processProducts);
+        $("#spinner").hide();
+        
+    });
+    
+ /**
+ * Remove a row from the products table to append it into the selected products table
+ */
+    function appendToSelectedProducts() {
+    
+        // disable the waybill id input
+        $("#waybill_id").prop("disabled", true );
+    
+        // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
+        // set double click event to append the row to products.
+        // set click event to set/unset the background        
+        $(this).detach().clone().append('<td></td><td><input type="number"/></td>').appendTo('#selected_products_table')
+                 .addClass('change_product')
+                 .dblclick(appendToProducts)
+                 .click(setBackground);
+         
+        // increase the amount of selected products  
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())+1);
+    }
+   
+   /**
+ * Remove a row from the selected products table to append it into the products table
+ */
+    function appendToProducts() {
+            
+        // remove the input td
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        
+        // detach the row from the selected products table, remove the last td and append it to the #products table.
+        $(this).detach().clone().appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        
+        // decrease the amount of selected products
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
+    }
+
+ /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function searchProducts() {
+     
+         $("#spinner").show();
+        searchInvoiceProperties();
+    }
+
+ function searchInvoiceProperties() {
+ 
+       // get the invoice id 
+        var invoiceId = $("#invoice_id").val();
+        
+        // get the invoice bill 
+        var invoiceBill = getInvoiceBill();
+ 
+        // run the server-side function to get the products.
+        google.script.run.withSuccessHandler(searchInvoicePropertiesSuccessHandler).getInvoiceProperties(invoiceId, invoiceBill);     
+ }
+
+ /** 
+ * Get the array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function searchInvoiceProducts() {
+     
+        // get the invoice id 
+        var invoiceId = $("#invoice_id").val();
+        
+        // get the invoice bill 
+        var invoiceBill = getInvoiceBill();
+        
+        // run the server-side function to get the products.
+        google.script.run.withSuccessHandler(searchInvoiceProductsSuccessHandler).getInvoiceProducts(invoiceId, invoiceBill);     
+    }
+
+
+     /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function searchNotSoldProducts(invoiceStore) {
+        
+        // run the server-side function to get the not sold products.
+        google.script.run.withSuccessHandler(searchNotSoldProductsSuccessHandler).getNotSoldProducts(invoiceStore);     
+    }
+    
+    /**
+* Receives the invoice properties found when searching the invoice.
+*/
+  function searchInvoicePropertiesSuccessHandler(properties) {
+    
+      var json = JSON.parse(properties);
+      
+      var store = json[0];
+      var date = json[1];
+      var chargeback = json[2];
+      var bill = json[3];
+      
+      // set the store
+      $("#stores").val(store);
+      
+      // set the date
+      var newDate = new Date(Date.parse(date));
+      newDate.setHours(24);
+      document.getElementById("invoice_date").valueAsDate = newDate;
+     
+      // set the chargeback reason
+      $("#chargeback_input").val(chargeback);
+      
+      // search the not sold products based on the store
+      searchNotSoldProducts(store);
+  };
+  
+
+/**
+* Receives the products found when searching products.
+*/
+  function searchInvoiceProductsSuccessHandler(products) {
+    
+     var json = JSON.parse(products);
+     var tbody = $('#selected_products_table tbody');
+     var date = "";
+     
+     // clear the previous content
+     $(tbody).empty();
+     
+     // add each item to the tbody
+     $.each(json, function(i, product) {
+
+         var productId = product[0];
+         var productName = product[1];
+         var productSize = product[2];
+         var productAmount = product[4];
+         var productInventory = product[5];
+         
+         if (!productInventory) {
+            productInventory = 0;
+         }
+         
+         var tdChange = "<td><input id='product_"+productId+"' class='change_product' type='number'/></td>"
+         
+         var tr = "<tr class='change_product'><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td><td>"+productAmount+"</td>"+tdChange+"</tr>";
+         
+         tbody.append(tr);
+         
+         date = product[1];
+         
+      });
+      
+       $("#spinner").hide();
+
+  };
+  
+  /**
+* Receives the not sold products found when searching products.
+*/
+  function searchNotSoldProductsSuccessHandler(products) {
+    
+     var json = JSON.parse(products);
+     var tbody = $('#products_table tbody');
+     
+     // clear the previous content
+     $(tbody).empty();
+     
+     // add each item to the tbody
+     $.each(json, function(i, product) {
+         
+         var productId = product[0];
+         var productName = product[1];
+         var productSize = product[2];
+         var productInventory = product[5];
+
+         var tr = "<tr><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td></tr>";
+         
+         tbody.append(tr);
+      });
+      
+         // color a table row background
+        $("#products_table tbody tr").click(setBackground);
+        
+        // remove the .selected class from the row, detach it and append to the #selected_products_table. 
+        $("#products_table tbody tr").dblclick(appendToSelectedProducts);
+        
+        searchInvoiceProducts();
+  };
+  
+  function getInvoiceBill() {
+  
+        // get the invoice bill 
+        var bill = $('input[name=bill]:checked').val();
+        var invoiceBill = "";
+       
+        if (bill == "receipt") {
+          invoiceBill = "Boleta";
+        }
+      
+        if (bill == "invoice") {
+          invoiceBill = "Factura";
+        }
+      
+        if (bill == "chargeback") {
+          invoiceBill = "Guía de Devolución";
+        }  
+
+     return invoiceBill;
+  }
+  
+    /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function processProducts() {
+ 
+       if (validateForm()) {
+       
+       // create flags to validate the products
+       var areProductsValidated = true;
+       var noProducts = true;
+       var productsIndex = 0;
+       
+       // get the values
+       var billDate = $("#invoice_date").val();
+       var billId = $("#invoice_id").val();
+       var store = $("#stores").find(":selected").text();
+       var billType = $('input[name=bill]:checked').val();
+       var chargeback = $("#chargeback_input").val();
+       
+        // Iterate each .waybill_product tr 
+        var bill = [];
+        
+        $("#selected_products_table tbody tr").each(function(index) {
+
+         noProducts = false;
+         
+         //get the name, size and amount
+         var id = $(this).find("td")[0].innerHTML;
+         var name = $(this).find("td")[1].innerHTML;
+         var size = $(this).find("td")[2].innerHTML;
+         var inventory = $(this).find("td")[3].innerHTML;
+         var invoiceStock = $(this).find("td")[4].innerHTML;
+         var amount = $(this).find("td:last input").val();
+
+          inventory = parseInt(inventory);
+          amount = parseInt(amount);
+          invoiceStock = parseInt(invoiceStock);
+         
+         //validate the amount greater than zero to change only the products edited.
+         if (amount > 0) {
+         
+           var difference = amount - invoiceStock;
+         
+           // validate the amount less or equal to the inventory
+           if (difference > inventory) {
+         
+              $("#edit_receipt_or_invoice_button").removeAttr('disabled');
+              alert("La cantidad ingresada de " + name + " " + size + " no puede ser mayor al inventario total.");
+              areProductsValidated = false;
+              return false;
+           }
+         
+           var product = {};
+         
+           // set the product object
+           product.billDate = billDate;
+           product.billId = billId;
+           product.store = store;
+           product.id = id;
+           product.name = name;
+           product.size = size;
+           product.amount = amount;
+           product.inventory = inventory;
+           product.invoiceStock = invoiceStock;
+           product.billType = billType;
+           product.chargeback = chargeback;
+           
+           // add the object to array
+           bill[productsIndex] = product;
+           productsIndex++;
+
+          }
+            
+        });
+        
+        // validate at least one product selected
+        if (noProducts) {
+        
+            $("#edit_receipt_or_invoice_button").removeAttr('disabled');
+            alert("Debe seleccionar al menos un producto.");
+            areProductsValidated = false;
+        }
+        
+       // process the waybill
+       if (areProductsValidated) { 
+          
+          $("#spinner").show();
+          
+           google.script.run
+           .withSuccessHandler(editReceiptOrInvoiceSuccessHandler)
+           .withFailureHandler(editReceiptOrInvoiceFailureHandler)
+           .editReceiptOrInvoice(bill);
+        }
+      }
+
+    }
+  
+  
+  function validateForm() {
+    
+      // get the values
+       var invoiceNumber = $("#invoice_id").val();
+       var invoiceDate = $("#invoice_date").val();
+       var store = $("#stores").find(":selected").text();
+       var billType = $('input[name=bill]:checked').val();
+ 
+      // validate non-empty and greater than zero waybill number.
+      if (!invoiceNumber) {
+         
+         $("#edit_receipt_or_invoice_button").removeAttr('disabled');
+         alert("Debe ingresar un número de Factura, Boleta o Donación.");
+         return false;
+      }
+      
+      // validate non-empty and greater than zero waybill date.
+      if (!invoiceDate || invoiceDate <= 0) {
+         
+         $("#edit_receipt_or_invoice_button").removeAttr('disabled');
+         alert("Debe seleccionar una fecha para la Factura, Boleta o Donación.");
+         return false;
+      }
+      
+      // validate non-empty and greater than zero waybill number.
+      if (!store) {
+         
+         $("#edit_receipt_or_invoice_button").removeAttr('disabled');
+         alert("Debe seleccionar una tienda para a Factura, Boleta o Donación.");
+         return false;
+      }
+      
+      // validate non-empty bill type.
+      if (!billType) {
+         
+         $("#edit_receipt_or_invoice_button").removeAttr('disabled');
+         alert("Debe seleccionar si es boleta, factura o guía de devolución.");
+         return false;
+      }
+      
+      return true;
+    
+    }
+    
+    
+  function editReceiptOrInvoiceSuccessHandler(response) {
+  
+    $("#spinner").hide();
+    alert("La edición de la venta o donación fue realizada exitosamente.");
+    google.script.host.close();
+    
+  }
+  
+  function editReceiptOrInvoiceFailureHandler(response) {
+    
+    $("#spinner").hide();
+    $("#edit_receipt_or_invoice_button").removeAttr('disabled');
+    alert("La edición de la venta o donación falló.");
+  }
+  
+
+</script>

@@ -1,0 +1,320 @@
+<script> 
+	
+    $(document).ready(function() {
+        
+       $("#spinner").hide();
+       
+       $("#edit_waybill_button").click(processProducts);
+        
+    });
+
+ /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function searchInvoiceProducts() {
+    
+        $("#spinner").show();
+     
+        // get the waybill id 
+        var invoiceId = $('#invoice_id').val();
+        
+        // run the server-side function to get the products.
+        google.script.run.withSuccessHandler(searchInvoiceProductsSuccessHandler).getSupplierInvoiceProducts(invoiceId);     
+    }
+
+/**
+* Receives the products found when searching products.
+*/
+  function searchInvoiceProductsSuccessHandler(products) {
+    
+     var json = JSON.parse(products);
+     var tbody = $('#selected_products_table tbody');
+     
+     // clear the previous content
+     $(tbody).empty();
+     
+     // add each item to the tbody
+     $.each(json, function(i, product) {
+         
+         var date = product[1];
+         var productId = product[4];
+         var productName = product[5];
+         var productSize = product[6];
+         var productAmount = product[7];
+         var productCost = product[8];
+         var productShipping = product[10];
+         
+         // create the td with the change input on it
+         var tdChange = "<td><input id='q"+productId+"' class='change_product' onchange='calculateCost(this)' type='number'/></td>";
+         
+         // create the td with the cost input on it
+         var tdCost = "<td><input id='c"+productId+"' onchange='calculateCost(this)' type='number'/></td>";
+         
+         // create the td with the cost input on it
+         var tdShipping = "<td><input id='p"+productId+"' onchange='calculateCost(this)' type='number'/></td>";
+         
+         // create the td with the cost input on it
+         var tdTotalCost = "<td><input id='t"+productId+"' class='products_cost' type='number' disabled/></td>";
+         
+         // create the td with the cost input on it
+         var tdTotalShipping = "<td><input id='s"+productId+"' class='products_shipping' type='number' disabled/></td>";
+         
+         // create the entire tr
+         var tr = "<tr class='invoice_product'><td>" + productId + "</td><td>" + productName + "</td><td>" + productSize + "</td><td>" + productAmount + "</td><td>" + productCost + "</td><td>" + productShipping + "</td>" + tdChange + tdCost + tdTotalCost + tdShipping + tdTotalShipping + "</tr>";
+         
+         // append the tr to the table tbody
+         tbody.append(tr);
+         
+         // set the name of the supplier in the combobox
+         $("#suppliers").val(product[2]);
+         
+         // set the date 
+         var newDate = new Date(Date.parse(date));
+         newDate.setHours(24);
+         document.getElementById("invoice_date").valueAsDate = newDate;
+         
+      });
+      
+      // set the amount of products found
+      $("#selected_products_count").text(Object.keys(json).length);
+      
+      $("#spinner").hide();
+  }
+  
+  function calculateCost(e) {
+   
+      // get the id
+      var id = e.id;
+      var productId = id.substring(1, id.length);
+      
+      // get the variables
+      var quantity = $("#q"+productId).val();
+      var cost = $("#c"+productId).val();
+      var shipping = $("#p"+productId).val();
+      
+      //parse the text
+      quantity = parseFloat(quantity);
+      cost = parseFloat(cost);
+      shipping = parseFloat(shipping);
+      
+      //validate percentage
+      if (shipping < 0 || shipping > 100) {
+      
+          alert("El % flete debe ser entre 0 y 100");
+          return;
+      }
+      
+      var productTotal = quantity * cost;
+      var productTotalShipping = shipping * productTotal / 100;
+      
+      $("#t"+productId).val(productTotal);
+      $("#s"+productId).val(productTotalShipping);
+      
+      calculateTotalCosts();
+
+      
+   }
+   
+   function calculateTotalCosts() {
+   
+      var totalProducts = 0;
+      var totalShipping = 0;
+       
+      $(".products_cost").each(function(index) {
+        
+        var value = $(this).val();
+        
+        if (!value) {
+          value = 0;
+        }
+        
+        totalProducts += parseFloat(value);
+        
+      });
+      
+      $(".products_shipping").each(function(index) {
+         
+         var value = $(this).val();
+         
+         if (!value) {
+          value = 0;
+        }
+         
+         totalShipping += parseFloat(value);
+      });
+      
+      var totalInvoice = parseFloat(totalProducts + totalShipping);
+      
+      $("#total_products").text("$"+totalProducts.toFixed(2));
+      $("#total_shipping").text("$"+totalShipping.toFixed(2));
+      $("#total_invoice").text("$"+totalInvoice.toFixed(2));
+   
+   }
+  
+  
+  /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function processProducts() {
+        
+        if (validateForm()) {
+       
+       // create flags to validate the products
+       var areProductsValidated = true;
+       var noProducts = true;
+       
+       // get the values
+       var invoiceNumber = $("#invoice_id").val();
+       var invoiceDate = $("#invoice_date").val();
+       var supplier = $("#suppliers").find(":selected").text();      
+ 
+        // Iterate each .waybill_product tr 
+        var invoice = [];
+        $(".invoice_product").each(function(index) {
+
+         noProducts = false;
+
+         //get the name, size and amount
+         var id = $(this).find("td")[0].innerHTML;
+         var name = $(this).find("td")[1].innerHTML;
+         var size = $(this).find("td")[2].innerHTML;
+         var invoiceStock = $(this).find("td")[3].innerHTML;
+         var invoiceCost = $(this).find("td")[4].innerHTML;
+         
+         //get the new amount and cost
+         var amount = $(this).find("td input")[0].value;
+         var cost = $(this).find("td input")[1].value;
+         var shipping = $(this).find("td input")[3].value;
+
+          invoiceStock = parseInt(invoiceStock);
+          invoiceCost = parseInt(invoiceCost);
+          var amountVal = parseInt(amount);
+          var costVal = parseInt(cost);
+          
+         
+         //validate the amount greater than zero
+         if (amountVal <= 0) {
+         
+            $("#edit_waybill_button").removeAttr('disabled');
+            alert("La cantidad ingresada de " + name + " " + size + " debe ser mayor a 0.");
+            areProductsValidated = false;
+            return false;
+         }
+         
+         // validate the cost greater than zero
+         if (costVal <= 0) {
+         
+            $("#edit_waybill_button").removeAttr('disabled');
+            alert("La costo ingresado de " + name + " " + size + " deber ser mayor a 0.");
+            areProductsValidated = false;
+            return false;
+         }
+         
+         // validate the cost greater than zero
+         if (shipping < 0 || shipping > 100) {
+         
+            $("#edit_waybill_button").removeAttr('disabled');
+            alert("El % flete ingresado de " + name + " " + size + " deber estar entre 0 y 100.");
+            areProductsValidated = false;
+            return false;
+         }
+         
+         var product = {};
+         
+         // set the product object
+         product.invoiceNumber = invoiceNumber;
+         product.invoiceDate = invoiceDate;
+         product.supplier = supplier;
+         product.id = id;
+         product.name = name;
+         product.size = size;
+         product.invoiceStock = invoiceStock;
+         product.invoiceCost = invoiceCost;
+         product.amount = amount;
+         product.cost = cost;
+         product.shipping = shipping;
+         
+            // add the object to array
+            invoice[index] = product;
+        });
+
+        // validate at least one product selected
+        if (noProducts) {
+            
+            $("#edit_waybill_button").removeAttr('disabled');
+            alert("Debe seleccionar al menos un producto.");
+            areProductsValidated = false;
+        }
+        
+       // process the invoice
+       if (areProductsValidated) {
+       
+          $("#spinner").show();
+
+          
+           google.script.run
+           .withSuccessHandler(editSupplierInvoiceSuccessHandler)
+           .withFailureHandler(editSupplierInvoiceFailureHandler)
+           .editSupplierInvoice(invoice);
+           
+           
+        } else {
+        
+          alert("No se han validado todos los productos");
+        
+        }
+        
+      }
+    }
+    
+    function validateForm() {
+    
+      // get the values
+       var invoiceNumber = $("#invoice_id").val();
+       var invoiceDate = $("#invoice_date").val();
+       var supplier = $("#suppliers").find(":selected").text();
+ 
+      // validate non-empty and greater than zero waybill number.
+      if (!invoiceNumber || invoiceNumber <= 0) {
+         
+         $("#edit_waybill_button").removeAttr('disabled');
+         alert("Debe ingresar el código de factura.");
+         return false;
+      }
+      
+      // validate non-empty and greater than zero waybill date.
+      if (!invoiceDate || invoiceDate <= 0) {
+         
+         $("#edit_waybill_button").removeAttr('disabled');
+         alert("Debe seleccionar una fecha para la Factura de Compra.");
+         return false;
+      }
+      
+      // validate non-empty and greater than zero waybill number.
+      if (!supplier) {
+         
+         $("#edit_waybill_button").removeAttr('disabled');
+         alert("Debe seleccionar un proveedor para la Factura de Compra.");
+         return false;
+      }
+      
+      return true;
+    
+    }
+    
+  function editSupplierInvoiceSuccessHandler(response) {
+  
+    $("#spinner").hide();
+    alert("La edición de la factura de compra fue realizado exitosamente.");
+    google.script.host.close();
+    
+  }
+  
+  function editSupplierInvoiceFailureHandler(response) {
+    
+    $("#spinner").hide();
+    $("#edit_waybill_button").removeAttr('disabled');
+    alert("La edición de la factura de compra falló.");
+  }
+
+</script>

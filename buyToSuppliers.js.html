@@ -1,0 +1,284 @@
+<script> 
+	
+    $(document).ready(function() {
+    
+        // color a table row background
+        $("#products_table tbody tr").click(setBackground);
+        
+        // remove the .selected class from the row, detach it and append to the #selected_products_table. 
+        $("#products_table tbody tr").dblclick(appendToSelectedProducts);
+        
+        $("#add_invoice_button").click(processProducts);
+        $("#spinner").hide();
+        
+        // set the invoice date as today date.
+        document.getElementById("invoice_date").valueAsDate = new Date();
+    });
+    
+ /**
+ * Remove a row from the products table to append it into the selected products table
+ */
+    function appendToSelectedProducts() {
+    
+        // remove the background
+        $(this).removeClass('selected');
+        
+        // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
+        // set double click event to append the row to products.
+        // set click event to set/unset the background
+        var id = $(this).find("td:first").html();
+        
+        $(this).detach().clone().append('<td><input id="q'+id+'" onchange="calculateCost(this)" type="number"/></td><td><input id="c'+id+'" onchange="calculateCost(this)" type="number"/></td><td><input id="t'+id+'" type="number" class="products_cost" disabled/></td><td><input id="p'+id+'" onchange="calculateCost(this)" type="number"/></td><td><input id="s'+id+'" class="products_shipping" type="number" disabled/></td>').appendTo('#selected_products_table')
+                 .addClass('invoice_product')
+                 .dblclick(appendToProducts)
+                 .click(setBackground);
+         
+        // increase the amount of selected products  
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())+1);
+        
+    }
+   
+   /**
+ * Remove a row from the selected products table to append it into the products table
+ */
+    function appendToProducts() {
+    
+        // remove the last three input td
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        
+        // detach the row from the selected products table, remove the last td and append it to the #products table.
+        $(this).detach().clone().appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        
+        // decrease the amount of selected products
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
+        
+        calculateTotalCosts();
+    }
+
+ /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function processProducts() {
+    
+        if (validateForm()) {
+       
+       // create flags to validate the products
+       var areProductsValidated = true;
+       var noProducts = true;
+       
+       // get the values
+       var invoiceNumber = $("#invoice_number").val();
+       var invoiceDate = $("#invoice_date").val();
+       var store = $("#stores").find(":selected").text();      
+ 
+        // Iterate each .waybill_product tr 
+        var invoice = [];
+        $(".invoice_product").each(function(index) {
+
+         noProducts = false;
+
+         //get the name, size and amount
+         var id = $(this).find("td")[0].innerHTML;
+         var name = $(this).find("td")[1].innerHTML;
+         var size = $(this).find("td")[2].innerHTML;
+         var inventory = $(this).find("td")[3].innerHTML;
+         
+         //get input values
+         var amount = $(this).find("td input")[0].value;
+         var cost = $(this).find("td input")[1].value;
+         var shipping = $(this).find("td input")[3].value;
+
+          var inventoryValue = parseInt(inventory);
+          var amountVal = parseInt(amount);
+          var costVal = parseInt(cost);
+         
+         //validate the amount greater than zero
+         if (amountVal <= 0) {
+            
+            $("#add_invoice_button").removeAttr('disabled');
+            alert("La cantidad ingresada de " + name + " " + size + " debe ser mayor a 0.");
+            areProductsValidated = false;
+            return false;
+         }
+         
+         // validate the cost greater than zero
+         if (costVal <= 0) {
+         
+            $("#add_invoice_button").removeAttr('disabled');
+            alert("La costo ingresado de " + name + " " + size + " deber ser mayor a 0.");
+            areProductsValidated = false;
+            return false;
+         }
+         
+         var product = {};
+         
+         // set the product object
+         product.invoiceNumber = invoiceNumber;
+         product.invoiceDate = invoiceDate;
+         product.store = store;
+         product.id = id;
+         product.name = name;
+         product.size = size;
+         product.amount = amount;
+         product.cost = cost;
+         product.shipping = shipping;
+         
+         // add the object to array
+         invoice[index] = product;
+        });
+
+        
+        // validate at least one product selected
+        if (noProducts) {
+        
+            $("#add_invoice_button").removeAttr('disabled');
+            alert("Debe seleccionar al menos un producto.");
+            areProductsValidated = false;
+        }
+        
+       // process the invoice
+       if (areProductsValidated) {
+       
+          $("#spinner").show();
+          
+           google.script.run
+           .withSuccessHandler(addSupplierInvoiceSuccessHandler)
+           .withFailureHandler(addSupplierInvoiceFailureHandler)
+           .addSupplierInvoice(invoice);
+           
+           
+        } else {
+        
+          alert("No se han validado todos los productos");
+        
+        }
+        
+      }
+    }
+    
+    function validateForm() {
+    
+      // get the values
+       var invoiceNumber = $("#invoice_number").val();
+       var invoiceDate = $("#invoice_date").val();
+       var store = $("#stores").find(":selected").text();
+ 
+      // validate non-empty and greater than zero waybill number.
+      if (!invoiceNumber || invoiceNumber <= 0) {
+         
+         $("#add_invoice_button").removeAttr('disabled');
+         alert("El número de la Factura de Compra debe ser mayor a cero.");
+         return false;
+      }
+      
+      // validate non-empty and greater than zero waybill date.
+      if (!invoiceDate || invoiceDate <= 0) {
+         
+         $("#add_invoice_button").removeAttr('disabled');
+         alert("Debe seleccionar una fecha para la Factura de Compra.");
+         return false;
+      }
+      
+      // validate non-empty and greater than zero waybill number.
+      if (!store) {
+         
+         $("#add_invoice_button").removeAttr('disabled');
+         alert("Debe seleccionar una tienda para la Factura de Compra.");
+         return false;
+      }
+      
+      return true;
+    
+    }
+
+   function calculateCost(e) {
+   
+      // get the id
+      var id = e.id;
+      var productId = id.substring(1, id.length);
+      
+      // get the variables
+      var quantity = $("#q"+productId).val();
+      var cost = $("#c"+productId).val();
+      var shipping = $("#p"+productId).val();
+      
+      //parse the text
+      quantity = parseFloat(quantity);
+      cost = parseFloat(cost);
+      shipping = parseFloat(shipping);
+      
+      //validate percentage
+      if (shipping < 0 || shipping > 100) {
+      
+          alert("El % flete debe ser entre 0 y 100");
+          return;
+      }
+      
+      var productTotal = quantity * cost;
+      var productTotalShipping = shipping * productTotal / 100;
+      
+      $("#t"+productId).val(productTotal);
+      $("#s"+productId).val(productTotalShipping);
+      
+      calculateTotalCosts();
+
+      
+   }
+   
+   function calculateTotalCosts() {
+   
+      var totalProducts = 0;
+      var totalShipping = 0;
+       
+      $(".products_cost").each(function(index) {
+        
+        var value = $(this).val();
+        
+        if (!value) {
+          value = 0;
+        }
+        
+        totalProducts += parseFloat(value);
+        
+      });
+      
+      $(".products_shipping").each(function(index) {
+         
+         var value = $(this).val();
+         
+         if (!value) {
+          value = 0;
+        }
+         
+         totalShipping += parseFloat(value);
+      });
+      
+      var totalInvoice = parseFloat(totalProducts + totalShipping);
+      
+      $("#total_products").text("$"+totalProducts.toFixed(2));
+      $("#total_shipping").text("$"+totalShipping.toFixed(2));
+      $("#total_invoice").text("$"+totalInvoice.toFixed(2));
+   
+   }
+
+
+  function addSupplierInvoiceSuccessHandler(response) {
+  
+    $("#spinner").hide();
+    alert("El ingreso de la factura de compra fue realizado exitosamente.");
+    google.script.host.close();
+    
+  }
+  
+  function addSupplierInvoiceFailureHandler(response) {
+    
+    $("#spinner").hide();
+    $("#add_invoice_button").removeAttr('disabled');
+    alert("El ingreso de la factura de compra falló.");
+  }
+  
+</script>

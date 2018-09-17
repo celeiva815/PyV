@@ -1,0 +1,83 @@
+<!DOCTYPE html> 
+<!-- styles --> 
+<?!=HtmlService.createHtmlOutputFromFile('styles.css').getContent();?> 
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+<div class="content"> 
+    <div class ="block"> 
+        <label>Id:</label>
+        <input id="product_id" name="id" type="number" autocomplete="off" placeholder="Id del producto" value="<?!=parseInt(getLastProductCreated()) + 1?>" disabled/>
+        <br>
+        <input id="product_name" name="name" autocomplete="off" placeholder="Nombre del Producto" type="text"/>
+        <br>
+        <input id="product_code" name="code" autocomplete="off" placeholder="Código del Producto" type="text"/>
+        <br>
+        <input id="product_size" name="size" autocomplete="off" placeholder="Tamaño" type="text"/>
+        <br>
+        <label>Inventario Inicial:</label>
+        <input id="product_inventory" name="inventory" placeholder="Inventario Inicial" type="number" value="0"/>
+        <br>
+        <label>Taller:</label>
+            <select id="product_workshops">
+                <?!=getActiveSuppliers().map(function(d) 
+                     { return "<option value='"+d[1]+"'>"+d[1]+"</option>"; }).join('\n');?> 
+            </select> 
+        <br>
+        <label>Tipo:</label>
+            <select id="product_types">
+                <option value="Angel">Angel</option>
+                <option value="Artesanía">Artesanía</option>
+                <option value="Corazón de Jesús">Corazón de Jesús</option>
+                <option value="Cristo">Cristo</option>
+                <option value="Nacimiento">Nacimiento</option>
+                <option value="Niño Jesús">Niño Jesús</option>
+                <option value="Sagrada Familia">Sagrada Familia</option>
+                <option value="Santo">Santo</option>
+                <option value="Velas">Velas</option>
+                <option value="Via Crucis">Via Crucis</option>
+                <option value="Virgen">Virgen</option>
+                <option value="Otro">Otro</option>
+             </select>
+         <br>
+          <label>Material:</label>
+            <select id="product_materials">
+                <option value="Arcilla">Arcilla</option>
+                <option value="Cera">Cera</option>
+                <option value="F de Vidrio">F de Vidrio</option>
+                <option value="Madera">Madera</option>
+                <option value="Otro">Otro</option>
+             </select>
+         <br>
+         <label>Acabado:</label>
+            <select id="product_terminations">
+                <option value="Acrílico">Acrílico</option>
+                <option value="Alabastro">Alabastro</option>
+                <option value="Arcilla Blanca Refractaria">Arcilla Blanca Refractaria</option>
+                <option value="Barnizado">Barnizado</option>
+                <option value="Blanco/Dorado">Blanco/Dorado</option>
+                <option value="Cerámica Terracota Esmaltada">Cerámica Terracota Esmaltada</option>
+                <option value="Marfil">Marfil</option>
+                <option value="Óleo">Óleo</option>
+                <option value="Para pintar">Para pintar</option>
+                <option value="Policromado">Policromado</option>
+                <option value="Tempera">Tempera</option>
+                <option value="Terracota">Terracota</option>
+                <option value="Tipo Bronce">Tipo Bronce</option>
+                <option value="Tipo Piedra">Tipo Piedra</option>
+                <option value="Otro">Otro</option>
+             </select>
+         <br>
+            <form action="">
+            <input type="radio" name="product_space" value="Int"> Int<br>
+            <input type="radio" name="product_space" value="Ext"> Ext<br>
+          </form>
+          <br>
+          <p>
+               <button id="create_product_button" class="process_button" type="button" onclick="this.disabled=true;">Crear Producto</button>
+               <img id="spinner" src="https://drive.google.com/uc?export=download&amp;id=1d1UkmZaPE_r37hGwCdxtodrgbEfFm12W" style="width: 50px; position: absolute;">
+            </div>            
+         
+</div> 
+<!-- javascript. --> <?!=HtmlService.createHtmlOutputFromFile('createProduct.js').getContent();?>
+<!-- javascript. --> <?!=HtmlService.createHtmlOutputFromFile('main.js').getContent();?>
+
+

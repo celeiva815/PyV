@@ -1,0 +1,221 @@
+<script> 
+	
+    $(document).ready(function() {
+    
+        // color a table row background
+        $("#products_table tbody tr").click(setBackground);
+        
+        // remove the .selected class from the row, detach it and append to the #selected_products_table. 
+        $("#products_table tbody tr").dblclick(appendToSelectedProducts);
+        
+        $("#add_waybills_button").click(processProducts);
+        
+        // set the invoice date as today date.
+        document.getElementById("invoice_date").valueAsDate = new Date();
+        
+        $("#spinner").hide();
+    });
+    
+ /**
+ * Remove a row from the products table to append it into the selected products table
+ */
+    function appendToSelectedProducts() {
+    
+        // remove the background
+        $(this).removeClass('selected');
+        
+        // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
+        // set double click event to append the row to products.
+        // set click event to set/unset the background
+        $(this).detach().clone().append('<td><input type="number"/></td><td><input type="number"/></td>').appendTo('#selected_products_table')
+                 .addClass('waybill_product')
+                 .dblclick(appendToProducts)
+                 .click(setBackground);
+         
+        // increase the amount of selected products  
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())+1);
+    }
+   
+   /**
+ * Remove a row from the selected products table to append it into the products table
+ */
+    function appendToProducts() {
+    
+        // remove the input td
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        
+        // detach the row from the selected products table, remove the last td and append it to the #products table.
+        $(this).detach().clone().appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        
+        // decrease the amount of selected products
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
+    }
+
+ /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function processProducts() {
+           
+       if (validateForm()) {
+       
+       // create flags to validate the products
+       var areProductsValidated = true;
+       var noProducts = true;
+       
+       // get the values
+       var billDate = $("#invoice_date").val();
+       var billId = $("#waybill_number").val();
+       var store = $("#store").val();
+       var billType = $('input[name=bill]:checked').val();
+       
+        // Iterate each .waybill_product tr 
+        var bill = [];
+        $(".waybill_product").each(function(index) {
+
+         noProducts = false;
+
+         //get the name, size and amount
+         var id = $(this).find("td")[0].innerHTML;
+         var name = $(this).find("td")[1].innerHTML;
+         var size = $(this).find("td")[2].innerHTML;
+         var inventory = $(this).find("td")[3].innerHTML;
+         
+         var amount = $(this).find("td input")[0].value;
+         var price = $(this).find("td input")[1].value;
+
+          inventory = parseInt(inventory);
+          amount = parseInt(amount);
+          price = parseInt(price);
+         
+         //validate the amount greater than zero to change only the products edited.
+         if (amount <= 0) {
+
+              $("#add_waybills_button").removeAttr('disabled');
+              alert("La cantidad ingresada de " + name + " " + size + " debe ser mayor o igual a cero.");
+              areProductsValidated = false;
+              return false;
+         
+         }
+         
+                  //validate the amount greater than zero to change only the products edited.
+         if (price <= 0) {
+
+              $("#add_waybills_button").removeAttr('disabled');
+              alert("El precio ingresado de " + name + " " + size + " debe ser mayor o igual a cero.");
+              areProductsValidated = false;
+              return false;
+         
+         }
+         
+           // validate the amount less or equal to the inventory
+           if (amount > inventory) {
+         
+              $("#add_waybills_button").removeAttr('disabled');
+              alert("La cantidad ingresada de " + name + " " + size + " no puede ser mayor al inventario.");
+              areProductsValidated = false;
+              return false;
+           }
+         
+           var product = {};
+         
+           // set the product object
+           product.billDate = billDate;
+           product.billId = billId;
+           product.store = store;
+           product.id = id;
+           product.name = name;
+           product.size = size;
+           product.amount = amount;
+           product.price = price;
+           product.storeInventory = inventory;
+           product.billType = billType;  
+         
+           // add the object to array
+           bill[index] = product;
+            
+        });
+        
+        // validate at least one product selected
+        if (noProducts) {
+        
+            $("#add_waybills_button").removeAttr('disabled');
+            alert("Debe seleccionar al menos un producto.");
+            areProductsValidated = false;
+        }
+        
+       // process the waybill
+       if (areProductsValidated) { 
+          
+          $("#spinner").show();
+          
+           google.script.run
+           .withSuccessHandler(sellOrDonateProductsSuccessHandler)
+           .withFailureHandler(sellOrDonateProductsFailureHandler)
+           .sellOrDonateProducts(bill);
+        }
+      }
+
+    }
+
+    function validateForm() {
+    
+      // get the values
+       var invoiceNumber = $("#waybill_number").val();
+       var invoiceDate = $("#invoice_date").val();
+       var store = $("#store").val();
+       var billType = $('input[name=bill]:checked').val();
+ 
+      // validate non-empty and greater than zero waybill number.
+      if (!invoiceNumber) {
+         
+         $("#add_waybills_button").removeAttr('disabled');
+         alert("Debe ingresar un número de Factura, Boleta o Donación.");
+         return false;
+      }
+      
+      // validate non-empty and greater than zero waybill date.
+      if (!invoiceDate || invoiceDate <= 0) {
+         
+         $("#add_waybills_button").removeAttr('disabled');
+         alert("Debe seleccionar una fecha para la Factura, Boleta o Donación.");
+         return false;
+      }
+      
+      // validate non-empty and greater than zero waybill number.
+      if (!store) {
+         
+         $("#add_waybills_button").removeAttr('disabled');
+         alert("Debe seleccionar una tienda para a Factura, Boleta o Donación.");
+         return false;
+      }
+      
+      // validate non-empty bill type.
+      if (!billType) {
+         
+         $("#add_waybills_button").removeAttr('disabled');
+         alert("Debe seleccionar si es boleta, factura o donación.");
+         return false;
+      }
+      
+      return true;
+    
+    }
+
+  function sellOrDonateProductsSuccessHandler(response) {
+  
+    $("#spinner").hide();
+    alert("La venta o donación fue realizada exitosamente.");
+    google.script.host.close();
+    
+  }
+  
+  function sellOrDonateProductsFailureHandler(response) {
+    
+    $("#spinner").hide();
+    $("#add_invoice_button").removeAttr('disabled');
+    alert("La venta o donación falló.");
+  }
+
+
+</script>

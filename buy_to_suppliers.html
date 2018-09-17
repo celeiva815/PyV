@@ -1,0 +1,75 @@
+<!DOCTYPE html> 
+<!-- styles --> 
+<?!=HtmlService.createHtmlOutputFromFile('styles.css').getContent();?> 
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+<div class="content"> 
+    <div class ="block">
+    
+       <div class="three_columns">
+        <label for="code">Número de Factura:</label>
+        <input id="invoice_number" type="number"/>
+        <br>
+        <label for="code">Fecha:</label>
+        <input id="invoice_date" class="current_date" type="date"/>
+        <br>
+        <label for="code">Procedencia:</label>
+            <select id="stores">
+                 <?!=getActiveSuppliers().map(function(d) 
+                     { return "<option value='"+d[1]+"'>"+d[1]+"</option>"; }).join('\n');?> 
+            </select> 
+            </div>
+            <div class="three_columns">
+            <h2>Total productos: <span id="total_products">$0.00</span></h2>
+            <h2>Total flete: <span id="total_shipping">$0.00</span></h2>
+            <h2>Total factura: <span id="total_invoice">$0.00</span></h2>
+            </div>
+            <div class="three_columns">
+               
+               <h2>Artículos seleccionados a comprar: <span id="selected_products_count">0</span></h2>
+               <button id="add_invoice_button" class="process_button" type="button" onclick="this.disabled=true;">Ingresar Factura</button>
+               <img id="spinner" src="https://drive.google.com/uc?export=download&amp;id=1d1UkmZaPE_r37hGwCdxtodrgbEfFm12W" style="width: 50px; position: absolute;">
+            </div>
+    </div>
+    <div class="block"> 
+         <div class="three_columns">
+          <h2>Productos Vigentes</h2>
+         <input type="text" id="filter_table" class="filter_input" onkeyup="filterTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
+         <table id="products_table" class="table table-hover row-clickable">
+           <thead>
+             <tr>
+                 <th>Id</th>
+                 <th width="40%">Artículo</th>
+                 <th>Tamaño</th> 
+                 <th>Inventario</th>
+             </tr> 
+           </thead>
+           <tbody>
+         <?!=getActiveProducts().map(function(d)
+                     { return "<tr> <td class='product_ids'>"+d[0]+"</td><td>"+d[2]+"</td><td>"+d[3]+"</td><td>"+d[10]+"</td>"; }).join('\n');?>
+          </tbody>
+         </table>
+         </div>
+         <div class="two_three_columns">
+         <h2>Productos Seleccionados</h2>
+         <input type="text" id="filter_second_table" class="filter_input" onkeyup="filterSecondTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
+         <table id="selected_products_table" class="table table-hover row-clickable">
+         <thead>
+             <tr>
+                 <th>Id</th>
+                 <th>Artículo</th>
+                 <th>Cm</th> 
+                 <th>BG</th>
+                 <th>Cant</th>
+                 <th>Cost. Uni</th>
+                 <th>Cost. Total</th>
+                 <th>% Flete</th>
+                 <th>Cost. Flete</th>
+             </tr>
+             </thead>
+         </table>
+         </div>
+    </div>
+</div> 
+<!-- javascript. --> <?!=HtmlService.createHtmlOutputFromFile('buyToSuppliers.js').getContent();?>
+<!-- javascript. --> <?!=HtmlService.createHtmlOutputFromFile('main.js').getContent();?>
+

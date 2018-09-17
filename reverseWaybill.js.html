@@ -1,0 +1,45 @@
+<script> 
+	
+    $(document).ready(function() {
+        
+        $("#spinner").hide();
+        
+    });
+        
+   
+ /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function reverseWaybill() {
+     
+        // get the waybill id 
+        var waybillId = $("#waybill_id").val();
+        
+        $("#spinner").show();
+        
+        // run the server-side function to get the products.
+        google.script.run.withSuccessHandler(reverseWaybillSuccessHandler).reverseWaybill(waybillId);     
+    }
+
+/**
+* Receives a response when the waybill was succesfully reversed.
+*/
+  function reverseWaybillSuccessHandler(response) {
+   
+   // get the waybill id 
+   var waybillId = $("#waybill_id").val();
+   
+   if (response) {
+   
+      alert("La Guía de Depacho " + waybillId + " fue anulada.");
+      google.script.host.close();
+      
+   } else {
+   
+      alert("La Guía de Depacho " + waybillId + " existe y no puede ser anulada");
+      $("#spinner").hide();
+      
+   }
+ }
+
+</script>

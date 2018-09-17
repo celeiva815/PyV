@@ -1,0 +1,126 @@
+<script> 
+	
+    $(document).ready(function() {
+        
+        $("#spinner").hide();
+        $("#create_product_button").click(processProducts);
+    });
+        
+      /** 
+ * Creates a product and then calls the google app script function to process the spreadsheet
+ */
+    function processProducts() {
+ 
+       // create flags to validate the products
+       var areProductsValidated = true;
+       var noProducts = true;
+       
+       // get the values
+       var id = $("#product_id").val();
+       var name = $("#product_name").val();
+       var code = $("#product_code").val();
+       var size = $("#product_size").val();
+       var inventory = $("#product_inventory").val();
+       var workshop = $("#product_workshops").find(":selected").text();
+       var material = $("#product_materials").find(":selected").text();
+       var termination = $("#product_terminations").find(":selected").text();
+       var type = $("#product_types").find(":selected").text();
+       var space = $('input[name=product_space]:checked').val();
+
+          inventory = parseInt(inventory);
+          id = parseInt(id);
+         
+          // validate non-empty name.
+         if (!name) {
+         
+           $("#create_product_button").removeAttr('disabled');
+           alert("Debe ingresar un nombre de producto");
+           return false;
+         }
+         
+         // validate non-empty code.
+         if (!code) {
+         
+           $("#create_product_button").removeAttr('disabled');
+           alert("Debe ingresar un código de producto");
+           return false;
+         }
+         
+         // validate non-empty size.
+         if (!size) {
+         
+           $("#create_product_button").removeAttr('disabled');
+           alert("Debe ingresar un tamaño de producto");
+           return false;
+         }
+         
+         // validate non-empty size.
+         if (!space) {
+         
+           $("#create_product_button").removeAttr('disabled');
+           alert("Debe seleccionar Int o Ext para el producto");
+           return false;
+         }
+         
+         //validate the amount greater than zero to change only the products edited.
+         if (inventory < 0) {
+         
+              $("#create_product_button").removeAttr('disabled');
+              alert("El inventario inicial de " + name + " " + size + " debe ser mayor o igual a cero.");
+              areProductsValidated = false;
+              return false;    
+         }
+         
+           var product = {};
+         
+           // set the product object
+           product.id = id;
+           product.name = name;
+           product.code = code;
+           product.size = size;
+           product.material = material;
+           product.termination = termination;
+           product.workshop = workshop;
+           product.inventory = inventory;
+           product.type = type;
+           product.space = space;
+        
+       // process the waybill
+       if (areProductsValidated) { 
+          
+          $("#spinner").show();
+          
+           google.script.run
+           .withSuccessHandler(createProductSuccessHandler)
+           .withFailureHandler(createProductFailureHandler)
+           .createProduct(product);
+        }
+   }
+    
+    
+    function createProductSuccessHandler(response) {
+    
+    if (response == -1) {
+      alert("El código de producto ya existe. Por favor, introduzca otro diferente.");
+      $("#spinner").hide();
+      $("#create_product_button").removeAttr('disabled');
+      
+    } else if (response == -2) {
+      alert("La combinación nombre-tamaño del producto ya existe. Por favor, ingrese un nombre o tamaño distintos.");
+      $("#spinner").hide();
+      $("#create_product_button").removeAttr('disabled');
+      
+    } else {
+    
+      alert("El producto fue creado correctamente.");
+      google.script.host.close();
+    }
+  }
+  
+  function createProductFailureHandler() {
+    alert("La creación del producto falló. Intente nuevamente.");
+    $("#spinner").hide();
+    $("#create_product_button").removeAttr('disabled');
+  }
+
+</script>

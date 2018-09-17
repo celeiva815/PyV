@@ -1,0 +1,22 @@
+<!DOCTYPE html> 
+<!-- styles --> 
+<?!=HtmlService.createHtmlOutputFromFile('styles.css').getContent();?> 
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+
+<div class="content"> 
+    <div class ="block">
+   
+        <label for="code">Última gúia creada: <?!=getLastWaybillCreated()?></label>   
+        <br>
+        <form action="javascript:reverseWaybill()">
+        <label for="code">Número de guía a anular:</label>
+        <input id="waybill_id" type="number" value="<?!=parseInt(getLastWaybillCreated()) + 1?>" disabled/>
+        <br>
+        <input type="submit" class="process_button" value="Anular Guía">
+        <img id="spinner" src="https://drive.google.com/uc?export=download&amp;id=1d1UkmZaPE_r37hGwCdxtodrgbEfFm12W" style="width: 50px; position: absolute;">
+        </form> 
+        <br>
+    </div>
+</div> 
+<!-- javascript. --> <?!=HtmlService.createHtmlOutputFromFile('reverseWaybill.js').getContent();?>
+
