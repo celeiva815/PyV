@@ -50,9 +50,6 @@ function editSaleOrDonation(invoice) {
   var sheet = MemsheetApp.getSheet("BD Ventas y donaciones desde BG");
   var productSheet = MemsheetApp.getSheet("Productos");
   var productIdColumn = productSheet.getColumn(1);
-  var lastRow = sheet.getLastRow()
-  
-  var values = [];
   
   // Iterate each waybill product and set its attributes in each column.
   for (var i=0; i<invoice.length; i++) {

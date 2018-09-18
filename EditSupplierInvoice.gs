@@ -34,66 +34,45 @@ function getSupplierInvoiceProducts(selectedInvoiceId) {
 
 function editSupplierInvoice(invoice) {
     
-  var sheet = SpreadsheetApp.getActive().getSheetByName('BD Compras a Proveedores');
+  //sort the table preparing to do the multiple searches in order to update the inventory
+  SpreadsheetApp.getActive().getSheetByName("Productos").sort(1, true);
+  
+  var productSheet = MemsheetApp.getSheet("Productos");
+  var productIdColumn = productSheet.getColumn(1);
+  var sheet = MemsheetApp.getSheet('BD Compras a Proveedores');
   
   // Iterate each waybill product and set its attributes in each column.
   for (var i=0; i<invoice.length; i++) {
    
     var product = invoice[i];
+    
     var amount = parseInt(product.amount);
     var cost = parseFloat(product.cost);
     var shipping = parseFloat(product.shipping);
     var invoiceStock = parseInt(product.invoiceStock);
+    var invoiceCost = parseInt(product.invoiceCost);
+    var invoiceShipping = parseInt(product.invoiceCost);
+    
     var difference = amount - invoiceStock;
-    var totalCost = 0;
-    var totalShipping = 0;
+    
     var row = findInvoiceProductCellRow(product.invoiceNumber, product.id);
-    var values = [];
     
-    if (product.amount != "" && product.cost != "") {
-          
-      var totalCost = product.amount * product.cost;
-      var totalShipping = totalCost * product.shipping /100
+    var totalCost = amount * cost;
+    var totalShipping = totalCost * shipping /100
             
-      sheet.getRange(row,8).setValue(product.amount);
-      sheet.getRange(row,9).setValue(product.cost);
-      sheet.getRange(row,10).setValue(totalCost);
-      sheet.getRange(row,11).setValue(product.shipping);
-      sheet.getRange(row,12).setValue(product.totalShipping);
+    sheet.getCell(row,8).setValue(amount);
+    sheet.getCell(row,9).setValue(cost);
+    sheet.getCell(row,10).setValue(totalCost);
+    sheet.getCell(row,11).setValue(shipping);
+    sheet.getCell(row,12).setValue(totalShipping);
       
           // decrease stock of the product
-    increaseProductStock(product.id, difference);
-      
-    } else if (product.amount != "") {
-      
-        amount = product.amount;
-        cost = sheet.getRange(row,9).getValue();
-        totalCost = product.amount * cost;
-        totalShipping = totalCost * product.shipping /100
-        
-      
-        sheet.getRange(row,10).setValue(totalCost);
-      
-          // decrease stock of the product
-    increaseProductStock(product.id, difference);
-      
-    } else if (product.cost != "") {
-      
-      var amount = sheet.getRange(row,8).getValue();
-        sheet.getRange(row,9).setValue(product.cost);
-        
-      var totalCost = amount * product.cost;
-        sheet.getRange(row,10).setValue(totalCost);
-      
-    }
-    
-    values[0] = new Array(amount, cost, totalCost, shipping, product.totalShipping);
-    
-    //set date and store
-    sheet.getRange(row,2).setValue(product.invoiceDate);
-    sheet.getRange(row,3).setValue(product.supplier);
+    increaseProductStock(product.id, difference, productIdColumn);
     
   }
+  
+  MemsheetApp.flush();
+  
 }
   
   
