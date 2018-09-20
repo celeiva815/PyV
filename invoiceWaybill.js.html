@@ -128,6 +128,10 @@
        var chargeback = $("#chargeback_text").val();
        var billType = $('input[name=bill]:checked').val();
        
+        if (!chargeback) {
+          chargeback = "";   
+        }
+       
         // Iterate each .waybill_product tr 
         var bill = [];
         $(".waybill_product").each(function(index) {
@@ -194,6 +198,7 @@
        if (areProductsValidated) { 
           
           $("#spinner").show();
+          console.log(bill.length);
           
            google.script.run
            .withSuccessHandler(invoiceWaybillSuccessHandler)

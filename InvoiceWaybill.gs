@@ -3,7 +3,7 @@
 */
 function openInvoiceWaybillDialog() {
   var html = HtmlService.createTemplateFromFile('invoice_waybill')
-  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1300)
+  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1500)
   .setTitle('Dialog');
   SpreadsheetApp.getUi().showModalDialog(html, 'Nueva Boleta, Factura o Guía de Devolución');
 }
@@ -35,60 +35,106 @@ function getProductsStore(selectedStoreName) {
 
 function invoiceWaybill(bill) {
   
-   var waybillIds = [];
+  /*
+  bill = [];
   
+  var b = {}
+  b.storeInventory = 2; 
+  b.amount=1; 
+  b.size="64cm"; 
+  b.billId=10000; 
+  b.chargeback=""; 
+  b.billType="invoice"; 
+  b.name="Corazon de Jesús";
+  b.billDate="2018-09-05";
+  b.store="Campanario";
+  b.id=278;
+  
+  bill.push(b);
+  */
+  
+  //sort the table preparing to do the multiple searches in order to update the inventory
+  SpreadsheetApp.getActive().getSheetByName("Productos").sort(1, true);
+  
+  var productSheet = MemsheetApp.getSheet("Productos");
+  var productIdColumn = productSheet.getColumn(1);
+  var sheet = MemsheetApp.getSheet("Base de Datos");
+  var cloneRows = [];
+  
+  var waybillIds = [];
+  
+  console.log("bill", bill);
+  
+  console.time("invoiceWaybill iteration");
   // Iterate each waybill product and set its attributes in each column.
   for (var i=0; i<bill.length; i++) {
    
+    console.time("invoiceWaybill change inventory");                                    
     var product = bill[i];
-    waybillIds[i] = changeStoreProductInventory(product);
+    waybillIds[i] = changeStoreProductInventory(product, sheet, productIdColumn, cloneRows);
+    console.timeEnd("invoiceWaybill change inventory");                                    
   }
+  console.timeEnd("invoiceWaybill iteration");
+  
+  console.time("invoice Waybill flush");                  
+  //update the tables
+  MemsheetApp.flush();
+  console.timeEnd("invoice Waybill flush");                  
+  
+  console.time("invoiceWaybill clones");                                    
+  //add the cloned rows with less waybill stock at the end of the sheet.
+  if (cloneRows.length > 0) {
+    sheet = SpreadsheetApp.getActive().getSheetByName("Base de Datos");
+    var lastRow = sheet.getLastRow();
+    sheet.getRange(lastRow+1, 1, cloneRows.length, cloneRows[0].length).setValues(cloneRows);
+  }
+  console.timeEnd("invoiceWaybill clones");                                    
   
   return waybillIds;
 }
   
-function changeStoreProductInventory(product) {
-    
-  var sheet = SpreadsheetApp.getActive().getSheetByName("Base de Datos");
-  var data = sheet.getRange("A:K").getValues();
+function changeStoreProductInventory(product, sheet, productIdColumn, cloneRows) {
+  
   var amount = parseInt(product.amount);
   var store = product.store;
   var waybillIds = [];
   var j = 0;
   
+  var length = sheet.rows.length;
+  console.log(length);
+  
   // iterate each row
-  for (var i = 0; i < data.length; i++) {
+  for (var i = 0; i < sheet.rows.length; i++) {
+    
+    var sheetStore = sheet.getCell(i+1,11).getValue();
+    var sheetProductId = sheet.getCell(i+1,6).getValue();
+    var sheetProductStatus = sheet.getCell(i+1,10).getValue();
     
     // check if it is a product-store-notselled row
-    if (data[i][10] == store && data[i][5] == product.id && data[i][9] == "No Vendido") {
+    if (sheetStore == store && sheetProductId == product.id && sheetProductStatus == "No Vendido") {
       
       // get the waybillId
-      var waybillId = data[i][0];
-      var waybillInventory = parseInt(data[i][8]);
+      var waybillId = sheet.getCell(i+1,1).getValue();
+      var waybillInventory = parseInt(sheet.getCell(i+1,9).getValue());
       
       waybillIds[j] = waybillId;
       j++;
       
       //if the amount invoiced is less than the store inventory, we create a new row with the invoice and 
       if (amount < waybillInventory) {
-       
-        // insert a new row
-        sheet.insertRows(i+2, 1);
         
-        //clone the waybill products in the new row
-        cloneInvoiceWaybillProduct(sheet, data, i+2, i);
+        //clone the waybill products in the new row with modified amount
+        sheet.getCell(i+1,9).setValue(waybillInventory - amount);
+        cloneRows.push(sheet.rows[i]);
         
-        //set the invoiced products in the new row
-        setInvoiceWaybillProduct(sheet, product, i+2);
+        //set the invoiced products in the actual row with the new amount
+        sheet.getCell(i+1,9).setValue(amount);
+        setInvoiceWaybillProduct(sheet, product, i+1);
         
-        //set the values of the amount left in the original Not Sold waybill
-        sheet.getRange(i+1,9).setValue(waybillInventory - amount);
-        sheet.getRange(i+2,9).setValue(amount);
-
         // if it's a chargeback, increase the inventory        
         if (product.billType == "chargeback") {
          
-          increaseProductStock(product.id, amount); 
+          increaseProductStock(product.id, amount, productIdColumn); 
           
         }
         
@@ -102,7 +148,7 @@ function changeStoreProductInventory(product) {
         // if it's a chargeback, increase the inventory        
         if (product.billType == "chargeback") {
          
-          increaseProductStock(product.id, amount); 
+          increaseProductStock(product.id, amount, productIdColumn); 
           
         }
         
@@ -116,7 +162,7 @@ function changeStoreProductInventory(product) {
         // if it's a chargeback, increase the inventory        
         if (product.billType == "chargeback") {
          
-          increaseProductStock(product.id, waybillInventory); 
+          increaseProductStock(product.id, waybillInventory, productIdColumn); 
           
         }
         
@@ -125,48 +171,28 @@ function changeStoreProductInventory(product) {
       }
     }
     
-    SpreadsheetApp.flush();
-    
   } 
-  
+
   return waybillIds;
 }
 
-  
-  function cloneInvoiceWaybillProduct(sheet, data, row, i) {
-   
-    var start = new Date().getTime();
-    
-    var values = []    
-    values[0] = data[i];
-    
-    sheet.getRange(row, 1, 1, 11).setValues(values);
-    SpreadsheetApp.flush();
-    
-    Logger.log("cloneInvoice:" + new Date().getTime()-start);
-  }
-  
-    function setInvoiceWaybillProduct(sheet, product, row) {
-      
-      var start = new Date().getTime();
-  
-        var billType = getSpanishBillType(product.billType);
-        var status = getSpanishStatus(product.billType);
+      function setInvoiceWaybillProduct(sheet, product, row) {
+       
+     //get the bill type and bill status  
+      var billType = getSpanishBillType(product.billType);
+      var status = getSpanishStatus(product.billType);
         
-        var values = [];
-        values[0] = new Array(billType, product.billId, product.billDate);
-      
-        sheet.getRange(row,3,1,3).setValues(values);
-        sheet.getRange(row,10).setValue(status);
+      sheet.getCell(row,3).setValue(billType);
+      sheet.getCell(row,4).setValue(product.billId);
+      sheet.getCell(row,5).setValue(product.billDate);
+      sheet.getCell(row,10).setValue(status);
       
       if (product.billType == "chargeback") {
        
-        sheet.getRange(row,12).setValue(product.chargeback);
+        sheet.getCell(row,12).setValue(product.chargeback);
       }
       
-      SpreadsheetApp.flush();
       
-      Logger.log("setInvoice:" + new Date().getTime()-start);
   }
   
   function getSpanishBillType(billType) {

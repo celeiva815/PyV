@@ -33,7 +33,9 @@ function getSupplierInvoiceProducts(selectedInvoiceId) {
 }
 
 function editSupplierInvoice(invoice) {
-    
+  
+  console.log(invoice);
+  
   //sort the table preparing to do the multiple searches in order to update the inventory
   SpreadsheetApp.getActive().getSheetByName("Productos").sort(1, true);
   
@@ -50,21 +52,34 @@ function editSupplierInvoice(invoice) {
     var cost = parseFloat(product.cost);
     var shipping = parseFloat(product.shipping);
     var invoiceStock = parseInt(product.invoiceStock);
-    var invoiceCost = parseInt(product.invoiceCost);
-    var invoiceShipping = parseInt(product.invoiceCost);
+    var invoiceCost = parseFloat(product.invoiceCost);
+    var invoiceShipping = parseFloat(product.invoiceCost);
     
     var difference = amount - invoiceStock;
     
     var row = findInvoiceProductCellRow(product.invoiceNumber, product.id);
-    
     var totalCost = amount * cost;
     var totalShipping = totalCost * shipping /100
-            
-    sheet.getCell(row,8).setValue(amount);
-    sheet.getCell(row,9).setValue(cost);
-    sheet.getCell(row,10).setValue(totalCost);
-    sheet.getCell(row,11).setValue(shipping);
-    sheet.getCell(row,12).setValue(totalShipping);
+    
+    
+    // if there is no row, it means it's a new product, so add it at the final of the table.
+    if (!row) {
+      
+      row = sheet.getLastRow() + 1;
+    }
+    
+      sheet.getCell(row,1).setValue(product.invoiceNumber);
+      sheet.getCell(row,2).setValue(product.invoiceDate);
+      sheet.getCell(row,3).setValue(product.supplier);
+      sheet.getCell(row,4).setValue(""); // here is the supplier code
+      sheet.getCell(row,5).setValue(product.id);
+      sheet.getCell(row,6).setValue(product.name);
+      sheet.getCell(row,7).setValue(product.size);
+      sheet.getCell(row,8).setValue(amount);
+      sheet.getCell(row,9).setValue(cost);
+      sheet.getCell(row,10).setValue(totalCost);
+      sheet.getCell(row,11).setValue(shipping);
+      sheet.getCell(row,12).setValue(totalShipping);
       
           // decrease stock of the product
     increaseProductStock(product.id, difference, productIdColumn);

@@ -234,6 +234,8 @@ function increaseProductStock(productId, amount, productIdColumn) {
     }
     
     var newStock = (parseInt(stock) + parseInt(amount));
+  
+    console.log(newStock);
     
     // set the new stock, substracting the amount
     inventorySheet.getCell(stockRowCell,11).setValue(newStock);
@@ -266,7 +268,7 @@ function findInvoiceProductCellRow(invoiceId, productId) {
     
     if (data[i][0] == invoiceId && data[i][4] == productId) {
       
-      var row = i+1;
+      var row = parseInt(i+1);
       return row;
     }
   }
