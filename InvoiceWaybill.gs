@@ -124,8 +124,15 @@ function changeStoreProductInventory(product, sheet, productIdColumn, cloneRows)
       if (amount < waybillInventory) {
         
         //clone the waybill products in the new row with modified amount
-        sheet.getCell(i+1,9).setValue(waybillInventory - amount);
-        cloneRows.push(sheet.rows[i]);
+        var cloneRow = [];
+        
+        for (var k = 0; k < sheet.rows[i].length; k++) {
+          
+          cloneRow.push(sheet.rows[i][k]);
+        }
+        
+        cloneRow[8] = waybillInventory - amount;
+        cloneRows.push(cloneRow);
         
         //set the invoiced products in the actual row with the new amount
         sheet.getCell(i+1,9).setValue(amount);

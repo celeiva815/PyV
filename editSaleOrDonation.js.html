@@ -28,6 +28,10 @@
  */
     function appendToSelectedProducts() {
     
+       var products = $('#selected_products_table tbody tr').length;
+       
+       if (products > 0) {
+    
         // remove the background
         $(this).removeClass('selected');
         
@@ -36,14 +40,20 @@
         // set click event to set/unset the background
         var id = $(this).find("td:first").html();
         
-        $(this).detach().clone().append('<td><input id="q'+id+'" type="number"/></td><td><input id="p'+id+'" type="number"/></td>').appendTo('#selected_products_table')
-                 .addClass('invoice_product')
+         var tdAmount = "<td><input id='q_"+id+"' type='number'/></td>"
+         var tdPrice = "<td><input id='p_"+id+"' type='number' /></td>"
+         var tdInvoiceAmount = "<td style='display:none;'>0</td>"
+         var tdInvoicePrice = "<td style='display:none;'>0</td>"
+        
+        $(this).detach().clone().append(tdAmount + tdPrice + tdInvoiceAmount + tdInvoicePrice).appendTo('#selected_products_table')
+                 .addClass('change_product')
                  .dblclick(appendToProducts)
                  .click(setBackground);
          
         // increase the amount of selected products  
         $("#selected_products_count").text(parseInt($("#selected_products_count").text())+1);
         
+        }
     }
    
    /**
@@ -52,6 +62,8 @@
     function appendToProducts() {
     
         // remove the last three input td
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
         $(this).find("td:last").remove();
         $(this).find("td:last").remove();
         
@@ -115,9 +127,12 @@
          var productAmount = product[7];
          var productInventory = product[8];
          
-         var tdChange = "<td><input id='c_"+productId+"' type='number'value='"+productAmount+"'/></td><td><input id='p_"+productId+"' type='number' value='"+productPrice+"'/></td><td style='display:none;'>"+productAmount+"</td><td style='display:none;'>"+productPrice+"</td>"
+         var tdAmount = "<td><input id='c_"+productId+"' type='number'value='"+productAmount+"'/></td>"
+         var tdPrice = "<td><input id='p_"+productId+"' type='number' value='"+productPrice+"'/></td>"
+         var tdInvoiceAmount = "<td style='display:none;'>"+productAmount+"</td>"
+         var tdInvoicePrice = "<td style='display:none;'>"+productPrice+"</td>"
          
-         var tr = "<tr class='change_product'><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td>"+tdChange+"</tr>";
+         var tr = "<tr class='change_product'><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td>" + tdAmount + tdPrice + tdInvoiceAmount + tdInvoicePrice + "</tr>";
          
          tbody.append(tr);
          
@@ -181,8 +196,8 @@
          var name = $(this).find("td")[1].innerHTML;
          var size = $(this).find("td")[2].innerHTML;
          var inventory = $(this).find("td")[3].innerHTML;
-         var invoiceStock = $(this).find("td")[4].innerHTML;
-         var invoicePrice = $(this).find("td")[5].innerHTML;
+         var invoiceStock = $(this).find("td")[6].innerHTML;
+         var invoicePrice = $(this).find("td")[7].innerHTML;
          var amount = $(this).find("td input")[0].value;
          var price = $(this).find("td input")[1].value;
 

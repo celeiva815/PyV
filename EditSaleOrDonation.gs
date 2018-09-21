@@ -55,14 +55,31 @@ function editSaleOrDonation(invoice) {
   for (var i=0; i<invoice.length; i++) {
    
     var product = invoice[i];
+    var billType = getSpanishDonationType(product.billType);
+    var billStatus = getSpanishDonationStatus(product.billType);
+    var difference = product.amount - product.invoiceStock;
     
     var row = findSaleOrDonationProductCellRow(product.billId, product.id);
     
+    // if there is no row, it means it's a new product, so add it at the final of the table.
+    if (!row) {
+      
+      row = sheet.getLastRow() + 1;
+    }
+    
+    sheet.getCell(row,1).setValue(product.billDate);
+    sheet.getCell(row,2).setValue(billType);
+    sheet.getCell(row,3).setValue(product.billId);
+    sheet.getCell(row,4).setValue(product.id);
+    sheet.getCell(row,5).setValue(product.name);
+    sheet.getCell(row,6).setValue(product.size);
     sheet.getCell(row,7).setValue(product.amount);
+    sheet.getCell(row,8).setValue(billStatus);
+    sheet.getCell(row,9).setValue(product.store);
     sheet.getCell(row,10).setValue(product.price);
     
     // decrease stock of the product
-    decreaseProductStock(product.id, product.amount - product.invoiceStock, productIdColumn);
+    decreaseProductStock(product.id, difference, productIdColumn);
   }  
   
   MemsheetApp.flush();
