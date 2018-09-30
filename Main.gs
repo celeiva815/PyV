@@ -20,10 +20,9 @@ function onOpen() {
       .addSeparator()
       .addItem('Vender o Donar', 'openSellOrDonateDialog')
       .addItem('Editar Venta o Donación ', 'openEditSaleOrDonationDialog')
+      .addItem('Eliminar productos de Venta o Donación', 'openRemoveSaleProductsDialog')  
       .addSeparator()
-      .addItem('Crear Producto', 'openCreateProductDialog')  
-      .addSeparator()
-      .addItem('Test', 'LogTest')  
+      .addItem('Crear Producto', 'openCreateProductDialog')
       .addToUi();
 
 }

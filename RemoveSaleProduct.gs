@@ -1,37 +1,37 @@
 /**
 * Shows the HTML form in a dialog shape.
 */
-function openRemoveInvoiceProductsDialog() {
-  var html = HtmlService.createTemplateFromFile('remove_invoice_product')
+function openRemoveSaleProductsDialog() {
+  var html = HtmlService.createTemplateFromFile('remove_sale_product')
   .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1500)
   .setTitle('Dialog');
-  SpreadsheetApp.getUi().showModalDialog(html, 'Eliminar productos de Factura de Compra');
+  SpreadsheetApp.getUi().showModalDialog(html, 'Eliminar productos de Venta o Donación');
 }
 
 
-function removeInvoiceProduct(invoice) {
+function removeSaleProduct(sale) {
   
   //sort the table preparing to do the multiple searches in order to update the inventory
   SpreadsheetApp.getActive().getSheetByName("Productos").sort(1, true);
   var productsSheet = MemsheetApp.getSheet("Productos");
-  var sheet = MemsheetApp.getSheet("BD Compras a Proveedores");
+  var sheet = MemsheetApp.getSheet("BD Ventas y donaciones desde BG");
   var deletedRows = [];
   var index = 0;
     
-  console.log("invoice", invoice);
+  console.log("sale", sale);
   
   console.time("count deleted");
   // Iterate each waybill product and set its attributes in each column.
   for (var row = sheet.getLastRow(); row>=2; row--) {
    
-    for (var i = 0; i < invoice.length; i++) {
+    for (var i = 0; i < sale.length; i++) {
       
-      var product = invoice[i];
+      var product = sale[i];
       
-      if (sheet.getCell(row, 1).getValue() == product.invoiceNumber && sheet.getCell(row,5).getValue() == product.id) {
+      if (sheet.getCell(row, 3).getValue() == product.saleNumber && sheet.getCell(row,4).getValue() == product.id) {
         
-         // decrease stock of the product
-         decreaseProductStock(product.id, product.invoiceStock, productsSheet.getColumn(1));
+         // increase stock of the product
+         increaseProductStock(product.id, product.saleStock, productsSheet.getColumn(1));
         
          // add to deleted the rows
          deletedRows[index] = row;
@@ -45,7 +45,7 @@ function removeInvoiceProduct(invoice) {
   MemsheetApp.flush("Productos");
   console.timeEnd("remove flush");   
   
-  sheet = SpreadsheetApp.getActive().getSheetByName("BD Compras a Proveedores");
+  sheet = SpreadsheetApp.getActive().getSheetByName("BD Ventas y donaciones desde BG");
 
   console.log("deleted rows: ", deletedRows);
   

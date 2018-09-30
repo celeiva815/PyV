@@ -1,0 +1,234 @@
+<script> 
+	
+    
+    $(document).ready(function() {
+        
+        $("#remove_waybill_product_button").click(processProducts);
+        $("#spinner").hide();
+        
+    });
+    
+    
+    function selectAll(source) {
+       
+       checkboxes = document.getElementsByName('delete_product');
+       
+       for(var i=0, n=checkboxes.length;i<n;i++) {
+          checkboxes[i].checked = source.checked;
+       }
+     }
+     
+      /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function searchProducts() {
+    
+        $("#spinner").show();
+     
+        // get the waybill id 
+        var saleId = $('#sale_id').val();
+        
+        // run the server-side function to get the products.
+        google.script.run.withSuccessHandler(searchSaleProductsSuccessHandler).getDonatedProducts(saleId);     
+    }
+
+/**
+* Receives the products found when searching products.
+*/
+  function searchSaleProductsSuccessHandler(products) {
+    
+     $("#spinner").hide();
+    
+     var json = JSON.parse(products);
+     var tbody = $('#products_table tbody');
+     var recipientName = "";
+     var date = "";
+     var bill = "";
+     
+     // clear the previous content
+     $(tbody).empty();
+     
+     // add each item to the tbody
+     $.each(json, function(i, product) {
+         
+        console.log(product);
+         
+         var productId = product[0];
+         var productName = product[1];
+         var productSize = product[2];
+         recipientName = product[3];
+         bill = product[4];
+         date = product[5];
+         var productPrice = product[6];
+         var productAmount = product[7];
+         var productInventory = product[8];
+         
+         var tdAmount = "<td><input id='c_"+productId+"' type='number'value='"+productAmount+"' disabled/></td>"
+         var tdPrice = "<td><input id='p_"+productId+"' type='number' value='"+productPrice+"' disabled/></td>"
+         // add a checkbox to decide if to eliminate or not
+         var tdChange = "<td><input id='d_"+productId+"' class='delete_product' name='delete_product' type='checkbox'/></td>"
+         
+         var tr = "<tr class='change_product'><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td>" + tdAmount + tdPrice + tdChange + "</tr>";
+         
+         tbody.append(tr);
+         
+      });
+      
+      // set the recipient
+      $("#recipients").val(recipientName);
+      
+      var newDate = new Date(Date.parse(date));
+      newDate.setHours(24);
+      document.getElementById("sale_date").valueAsDate = newDate;
+      
+      // set the bill
+      if (bill == "Boleta") {
+        $("input[name=bill][value='receipt']").prop("checked",true);
+      }
+      
+      if (bill == "Factura") {
+        $("input[name=bill][value='invoice']").prop("checked",true);
+      }
+      
+      if (bill == "Donación") {
+        $("input[name=bill][value='donation']").prop("checked",true);
+      }
+  }
+  
+   /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function processProducts() {
+ 
+       if (validateForm()) {
+       
+       // create flags to validate the products
+       var areProductsValidated = true;
+       var noProducts = true;
+       var modifyProducts = 0;
+       
+       // get the values
+       var saleNumber = $("#sale_id").val();
+       var saleDate = $("#sale_date").val();
+       var store = $("#recipients").find(":selected").text();      
+ 
+        // Iterate each .waybill_product tr 
+        var sale = [];
+        $(".change_product").each(function(index) {
+
+         //get the name, size and amount
+         //get the name, size and amount
+         var id = $(this).find("td")[0].innerHTML;
+         var name = $(this).find("td")[1].innerHTML;
+         var size = $(this).find("td")[2].innerHTML;
+         
+         //get the new amount and cost
+         var saleStock = $(this).find("td input")[0].value;
+         var cost = $(this).find("td input")[1].value;
+         var isDeleted = $(this).find("td:last input").is(":checked");
+         
+         if (!saleStock) {
+         
+           //TODO alert if there is no sale stock .
+         
+            saleStock = 0;
+         }
+           
+          saleStock = parseInt(saleStock);
+         
+           var product = {};
+         
+           // set the product object
+           product.saleNumber = saleNumber;
+           product.saleDate = saleDate;
+           product.store = store;
+           product.id = id;
+           product.name = name;
+           product.size = size;
+           product.saleStock = saleStock;
+           product.cost = cost;
+           
+           if (isDeleted) {
+           
+           // add the object to array
+           
+           sale[modifyProducts] = product;
+           modifyProducts++;
+           
+           }
+            
+        });
+        
+        // validate at least one product selected
+        if (modifyProducts == 0) {
+        
+            $("#remove_waybill_product_button").removeAttr('disabled');
+            alert("Debe seleccionar al menos un producto.");
+            areProductsValidated = false;
+        }
+        
+       // process the waybill
+       if (areProductsValidated) { 
+          
+          $("#spinner").show();
+          
+           google.script.run
+           .withSuccessHandler(removeSaleProductSuccessHandler)
+           .withFailureHandler(removeSaleProductFailureHandler)
+           .removeSaleProduct(sale);
+        }
+      }
+    }
+    
+    
+    function validateForm() {
+    
+      // get the values
+       var waybillNumber = $("#sale_id").val();
+       var waybillDate = $("#sale_date").val();
+       var store = $("#recipients").find(":selected").text();
+ 
+      // validate non-empty and greater than zero waybill number.
+      if (!waybillNumber) {
+         
+         $("#remove_waybill_product_button").removeAttr('disabled');
+         alert("El número de factura debe ser mayor a cero.");
+         return false;
+      }
+      
+      // validate non-empty and greater than zero waybill date.
+      if (!waybillDate || waybillDate <= 0) {
+         
+         $("#remove_waybill_product_button").removeAttr('disabled');
+         alert("Debe seleccionar una fecha para la Factura de compra.");
+         return false;
+      }
+      
+      // validate non-empty and greater than zero waybill number.
+      if (!store) {
+         
+         $("#remove_waybill_product_button").removeAttr('disabled');
+         alert("Debe seleccionar un taller para la Factura de compra.");
+         return false;
+      }
+      
+      return true;
+    
+    }
+    
+    function removeSaleProductSuccessHandler() {
+    
+    var waybillNumber = $("#sale_id").val();
+    alert("Los productos de la venta/donación " + waybillNumber + " fueron eliminados correctamente.");
+    google.script.host.close();
+    }
+  
+  function removeSaleProductFailureHandler() {
+    alert("La eliminación de productos falló. Intente nuevamente.");
+    $("#remove_waybill_product_button").removeAttr('disabled');
+    $("#spinner").hide();
+    
+  }
+
+
+</script>
