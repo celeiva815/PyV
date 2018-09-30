@@ -81,7 +81,7 @@
           amount = parseInt(amount);
          
          //validate the amount greater than zero
-         if (amount <= 0) {
+         if (!amount || amount <= 0) {
          
             $("#add_waybills_button").removeAttr('disabled');
             alert("La cantidad ingresada de " + name + " " + size + " debe ser mayor a 0.");

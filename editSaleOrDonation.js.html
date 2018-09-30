@@ -31,6 +31,10 @@
        var products = $('#selected_products_table tbody tr').length;
        
        if (products > 0) {
+       
+        // disable the invoice id input
+        $("#invoice_id").prop("disabled", true );
+        $("#invoice_id_submit").prop("disabled", true );
     
         // remove the background
         $(this).removeClass('selected');

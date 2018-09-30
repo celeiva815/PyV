@@ -8,10 +8,12 @@ function onOpen() {
       .createMenu('PyV')
       .addItem('Ingresar Guía', 'openAddWaybillDialog')
       .addItem('Editar Guía', 'openEditWaybillDialog')
+      .addItem('Eliminar productos de Guía', 'openRemoveWaybillProductsDialog')
       .addItem('Anular Guía', 'openReverseWaybillDialog')
       .addSeparator()
       .addItem('Comprar a Proveedores', 'openBuyToSuppliersDialog')
-      .addItem('Editar Factura de Compra', 'openEditSupplierInvoiceDialog')  
+      .addItem('Editar Factura de Compra', 'openEditSupplierInvoiceDialog')
+      .addItem('Eliminar productos de Factura de Compra', 'openRemoveInvoiceProductsDialog')  
       .addSeparator()
       .addItem('Facturar a Tiendas', 'openInvoiceWaybillDialog')
       .addItem('Editar Factura o Boleta', 'openEditReceiptOrInvoiceDialog')  
@@ -234,8 +236,6 @@ function increaseProductStock(productId, amount, productIdColumn) {
     }
     
     var newStock = (parseInt(stock) + parseInt(amount));
-  
-    console.log(newStock);
     
     // set the new stock, substracting the amount
     inventorySheet.getCell(stockRowCell,11).setValue(newStock);

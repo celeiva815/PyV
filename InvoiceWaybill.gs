@@ -34,25 +34,7 @@ function getProductsStore(selectedStoreName) {
 
 
 function invoiceWaybill(bill) {
-  
-  /*
-  bill = [];
-  
-  var b = {}
-  b.storeInventory = 2; 
-  b.amount=1; 
-  b.size="64cm"; 
-  b.billId=10000; 
-  b.chargeback=""; 
-  b.billType="invoice"; 
-  b.name="Corazon de Jesús";
-  b.billDate="2018-09-05";
-  b.store="Campanario";
-  b.id=278;
-  
-  bill.push(b);
-  */
-  
+   
   //sort the table preparing to do the multiple searches in order to update the inventory
   SpreadsheetApp.getActive().getSheetByName("Productos").sort(1, true);
   
@@ -63,32 +45,22 @@ function invoiceWaybill(bill) {
   
   var waybillIds = [];
   
-  console.log("bill", bill);
-  
-  console.time("invoiceWaybill iteration");
   // Iterate each waybill product and set its attributes in each column.
   for (var i=0; i<bill.length; i++) {
    
-    console.time("invoiceWaybill change inventory");                                    
     var product = bill[i];
     waybillIds[i] = changeStoreProductInventory(product, sheet, productIdColumn, cloneRows);
-    console.timeEnd("invoiceWaybill change inventory");                                    
   }
-  console.timeEnd("invoiceWaybill iteration");
   
-  console.time("invoice Waybill flush");                  
   //update the tables
   MemsheetApp.flush();
-  console.timeEnd("invoice Waybill flush");                  
   
-  console.time("invoiceWaybill clones");                                    
   //add the cloned rows with less waybill stock at the end of the sheet.
   if (cloneRows.length > 0) {
     sheet = SpreadsheetApp.getActive().getSheetByName("Base de Datos");
     var lastRow = sheet.getLastRow();
     sheet.getRange(lastRow+1, 1, cloneRows.length, cloneRows[0].length).setValues(cloneRows);
-  }
-  console.timeEnd("invoiceWaybill clones");                                    
+  }                           
   
   return waybillIds;
 }

@@ -29,12 +29,17 @@
     function appendToSelectedProducts() {
     
         // disable the waybill id input
-        $("#waybill_id").prop("disabled", true );
+        $("#invoice_id").prop("disabled", true );
+        $("#invoice_id_submit").prop("disabled", true );
     
         // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
         // set double click event to append the row to products.
         // set click event to set/unset the background        
-        $(this).detach().clone().append('<td></td><td><input type="number"/></td>').appendTo('#selected_products_table')
+        
+        var tdAmount = "<td><input type='number'/></td>";
+        var tdInvoiceAmount = "<td style='display:none;'>0</td>";
+        
+        $(this).detach().clone().append(tdAmount + tdInvoiceAmount).appendTo('#selected_products_table')
                  .addClass('change_product')
                  .dblclick(appendToProducts)
                  .click(setBackground);
@@ -152,15 +157,16 @@
          var productName = product[1];
          var productSize = product[2];
          var productAmount = product[4];
-         var productInventory = product[5];
+         var productStoreInventory = product[5];
          
-         if (!productInventory) {
-            productInventory = 0;
+         if (!productStoreInventory) {
+            productStoreInventory = 0;
          }
          
-         var tdChange = "<td><input id='product_"+productId+"' class='change_product' type='number'/></td>"
+         var tdAmount = "<td><input id='p"+productId+"' class='change_product' type='number' value='"+ productAmount +"'/></td>"
+         var tdInvoiceAmount = "<td style='display:none;'>"+productAmount+"</td>"
          
-         var tr = "<tr class='change_product'><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td><td>"+productAmount+"</td>"+tdChange+"</tr>";
+         var tr = "<tr class='change_product'><td>" + productId + "</td><td>" + productName + "</td><td>" + productSize + "</td><td>" + productStoreInventory + "</td>" + tdAmount + tdInvoiceAmount + "</tr>";
          
          tbody.append(tr);
          
@@ -189,9 +195,9 @@
          var productId = product[0];
          var productName = product[1];
          var productSize = product[2];
-         var productInventory = product[5];
+         var productStoreInventory = product[5];
 
-         var tr = "<tr><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td></tr>";
+         var tr = "<tr><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productStoreInventory+"</td></tr>";
          
          tbody.append(tr);
       });
@@ -257,15 +263,12 @@
          var name = $(this).find("td")[1].innerHTML;
          var size = $(this).find("td")[2].innerHTML;
          var inventory = $(this).find("td")[3].innerHTML;
-         var invoiceStock = $(this).find("td")[4].innerHTML;
-         var amount = $(this).find("td:last input").val();
+         var amount = $(this).find("td input")[0].value;
+         var invoiceStock = $(this).find("td")[5].innerHTML;
 
           inventory = parseInt(inventory);
           amount = parseInt(amount);
           invoiceStock = parseInt(invoiceStock);
-         
-         //validate the amount greater than zero to change only the products edited.
-         if (amount > 0) {
          
            var difference = amount - invoiceStock;
          
@@ -289,15 +292,13 @@
            product.size = size;
            product.amount = amount;
            product.inventory = inventory;
-           product.invoiceStock = invoiceStock;
+           product.storeInvoiceStock = invoiceStock;
            product.billType = billType;
            product.chargeback = chargeback;
            
            // add the object to array
            bill[productsIndex] = product;
            productsIndex++;
-
-          }
             
         });
         
@@ -320,7 +321,6 @@
            .editReceiptOrInvoice(bill);
         }
       }
-
     }
   
   
@@ -371,8 +371,19 @@
     
   function editReceiptOrInvoiceSuccessHandler(response) {
   
+   var waybillIds = "";
+    
+    for (var i = 0; i < response.length; i++) {
+    
+      for (var j = 0; j < response[i].length; j++) {
+        
+        waybillIds += response[i][j] + ", ";
+    
+      }    
+    }
+  
     $("#spinner").hide();
-    alert("La edición de la venta o donación fue realizada exitosamente.");
+    alert("Los productos fueron facturados correctamente.\nLas guias modificadas fueron las siguientes: " + waybillIds);
     google.script.host.close();
     
   }

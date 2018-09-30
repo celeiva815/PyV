@@ -5,19 +5,19 @@
 
 <div class="content"> 
     <div class ="block">
+    
        <div class="three_columns">
         <form action="javascript:searchInvoiceProducts()">
-        <label for="code">Ingrese el número de la factura:</label>
+        <label for="code">Ingrese el número de la Factura:</label>
         <input id="invoice_id" type="number"/>
-        <input id="invoice_id_submit" type="submit" value="Buscar"/>
+        <input id="invoice_id_submit" type="submit" value="Buscar">
         </form> 
-        
         <br>
         <label for="code">Fecha:</label>
-        <input id="invoice_date" class="current_date" type="date"/>
+        <input id="invoice_date" class="current_date" type="date" disabled/>
         <br>
         <label for="code">Taller de Procedencia: </label>
-            <select id="suppliers">
+            <select id="suppliers" disabled>
                  <?!=getActiveSuppliers().map(function(d) 
                      { return "<option value='"+d[1]+"'>"+d[1]+"</option>"; }).join('\n');?> 
             </select> 
@@ -26,54 +26,35 @@
             <h2>Total factura: <span id="total_products">$0.00</span></h2>
             <h2>Total flete: <span id="total_shipping">$0.00</span></h2>
             <h2>Total factura + flete: <span id="total_invoice">$0.00</span></h2>
-            </div>
+        </div>
         <div class="three_columns">
-        <h2>Artículos Agregados: <span id="selected_products_count">0</span></h2>
-            <button id="edit_waybill_button" class="process_button" type="button" onclick="this.disabled=true;">Editar Factura de Compra</button>
+            <button id="remove_waybill_product_button" class="process_button" type="button" onclick="this.disabled=true;">Eliminar productos</button>
             <img id="spinner" src="https://drive.google.com/uc?export=download&amp;id=1d1UkmZaPE_r37hGwCdxtodrgbEfFm12W" style="width: 50px; position: absolute;">
         </div>
     </div>
     <div class="block"> 
-    <div class="three_columns">    
-         <h2>Productos en Inventario</h2>
+         <h2>Productos Comprados</h2>
          <input type="text" id="filter_table" class="filter_input" onkeyup="filterTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
          <table id="products_table" class="table table-hover row-clickable">
            <thead>
              <tr>
                  <th>Id</th>
-                 <th >Artículo</th>
-                 <th>Tamaño</th> 
-             </tr> 
-           </thead>
-           <tbody>
-           <?!=getActiveProducts().map(function(d)
-                     { return "<tr> <td>"+d[0]+"</td><td>"+d[2]+"</td><td>"+d[3]+"</td>"; }).join('\n');?>
-          </tbody>
-         </table>
-         </div>
-         <div class="two_three_columns">
-         <h2>Productos en Factura</h2>
-         <input type="text" id="filter_second_table" class="filter_input" onkeyup="filterSecondTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
-         <table id="selected_products_table" class="table table-hover row-clickable">
-         <thead>
-             <tr>
-                 <th>Id</th>
                  <th width="30%">Artículo</th>
                  <th>Tamaño</th> 
-                 <th>Stock</th>
+                 <th>En Factura</th>
                  <th>Costo</th>
                  <th>Total Costo</th>
                  <th>% Flete</th>
                  <th>Total Flete</th>
-             </tr>
-             </thead>
-             <tbody>
-             </tbody>
+                 <th><input id="select_all" type="checkbox" onclick="selectAll(this)" style="margin-right: 5px;"/>  Eliminar</th>
+             </tr> 
+           </thead>
+           <tbody>
+          </tbody>
          </table>
-       </div>
     </div>
 </div> 
 <!-- javascript. --> <?!=HtmlService.createHtmlOutputFromFile('main.js').getContent();?>
-<!-- javascript. --> <?!=HtmlService.createHtmlOutputFromFile('editSupplierInvoice.js').getContent();?>
+<!-- javascript. --> <?!=HtmlService.createHtmlOutputFromFile('removeInvoiceProduct.js').getContent();?>
 
 
