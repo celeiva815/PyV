@@ -84,8 +84,7 @@ MemsheetApp = {
           column[i].push(this.rows[i][col-1]);
        }
        return column;
-      
-        return this.rows[0].length;
+        
       },
       getModifiedCells: function() {
       
@@ -223,9 +222,9 @@ MemsheetApp = {
     
     if (cells) {
       
+      console.log("updating " + l.name);
       l.getActiveSheet().getRange(l.firstModifiedCell[0], l.firstModifiedCell[1], l.lastModifiedCell[0]-l.firstModifiedCell[0]+1, l.lastModifiedCell[1]-l.firstModifiedCell[1]+1).setValues(cells);
     }
-      
       
     SpreadsheetApp.flush();
   }

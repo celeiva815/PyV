@@ -22,6 +22,64 @@
         $("#spinner").hide();
         
     });
+    
+   /**
+ * Remove a row from the products table to append it into the selected products table
+ */
+    function appendToSelectedProducts() {
+    
+       var products = $('#selected_products_table tbody tr').length;
+       
+       if (products > 0) {
+       
+        // disable the invoice id input
+        $("#invoice_id").prop("disabled", true );
+        $("#invoice_id_submit").prop("disabled", true );
+    
+        // remove the background
+        $(this).removeClass('selected');
+        
+        // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
+        // set double click event to append the row to products.
+        // set click event to set/unset the background
+        var id = $(this).find("td:first").html();
+        
+         var tdAmount = "<td><input id='q_"+id+"' type='number'/></td>"
+         var tdPrice = "<td><input id='p_"+id+"' type='number' /></td>"
+         var tdInvoiceAmount = "<td style='display:none;'>0</td>"
+         var tdInvoicePrice = "<td style='display:none;'>0</td>"
+        
+        $(this).detach().clone().append(tdAmount + tdPrice + tdInvoiceAmount + tdInvoicePrice).appendTo('#selected_products_table')
+                 .addClass('change_product')
+                 .dblclick(appendToProducts)
+                 .click(setBackground);
+         
+        // increase the amount of selected products  
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())+1);
+        
+        }
+    }
+   
+   /**
+ * Remove a row from the selected products table to append it into the products table
+ */
+    function appendToProducts() {
+    
+        // remove the last three input td
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        
+        // detach the row from the selected products table, remove the last td and append it to the #products table.
+        $(this).detach().clone().appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        
+        // decrease the amount of selected products
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
+        
+        calculateTotalCosts();
+    }  
+    
 
  /** 
  * Creates a array with the table information and calls the google app script function to process the spreadsheet
@@ -50,7 +108,7 @@
   function searchDonatedProductsSuccessHandler(products) {
     
      var json = JSON.parse(products);
-     var tbody = $('#products_table tbody');
+     var tbody = $('#selected_products_table tbody');
      var recipientName = "";
      var date = "";
      var bill = "";
@@ -66,18 +124,21 @@
          var productId = product[0];
          var productName = product[1];
          var productSize = product[2];
-         var productAmount = product[6];
-         var productInventory = product[7];
+         recipientName = product[3];
+         bill = product[4];
+         date = product[5];
+         var productPrice = product[6];
+         var productAmount = product[7];
+         var productInventory = product[8];
          
-         var tdChange = "<td><input id='product_"+productId+"' type='number'/></td>"
+         var tdAmount = "<td><input id='c_"+productId+"' type='number'value='"+productAmount+"'/></td>"
+         var tdPrice = "<td><input id='p_"+productId+"' type='number' value='"+productPrice+"'/></td>"
+         var tdInvoiceAmount = "<td style='display:none;'>"+productAmount+"</td>"
+         var tdInvoicePrice = "<td style='display:none;'>"+productPrice+"</td>"
          
-         var tr = "<tr class='change_product'><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productAmount+"</td><td>"+productInventory+"</td>"+tdChange+"</tr>";
+         var tr = "<tr class='change_product'><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td>" + tdAmount + tdPrice + tdInvoiceAmount + tdInvoicePrice + "</tr>";
          
          tbody.append(tr);
-         
-         recipientName = product[3];
-         date = product[5];
-         bill = product[4];
          
       });
       
@@ -101,6 +162,11 @@
         $("input[name=bill][value='donation']").prop("checked",true);
       }
       
+      // color a table row background
+        $("#products_table tbody tr").click(setBackground);
+        
+        // remove the .selected class from the row, detach it and append to the #selected_products_table. 
+        $("#products_table tbody tr").dblclick(appendToSelectedProducts);
       
   };
   
@@ -133,18 +199,37 @@
          var id = $(this).find("td")[0].innerHTML;
          var name = $(this).find("td")[1].innerHTML;
          var size = $(this).find("td")[2].innerHTML;
-         var invoiceStock = $(this).find("td")[3].innerHTML;
-         var inventory = $(this).find("td")[4].innerHTML;
-         var amount = $(this).find("td:last input").val();
+         var inventory = $(this).find("td")[3].innerHTML;
+         var invoiceStock = $(this).find("td")[6].innerHTML;
+         var invoicePrice = $(this).find("td")[7].innerHTML;
+         var amount = $(this).find("td input")[0].value;
+         var price = $(this).find("td input")[1].value;
 
           inventory = parseInt(inventory);
           amount = parseInt(amount);
+          price = parseFloat(price);
           invoiceStock = parseInt(invoiceStock);
-         
-         //validate the amount greater than zero to change only the products edited.
-         if (amount > 0) {
+          invoicePrice = parseFloat(invoicePrice);
          
            var difference = amount - invoiceStock;
+         
+         // validate the amount less or equal to the inventory
+           if (amount <= 0) {
+         
+              $("#edit_receipt_or_invoice_button").removeAttr('disabled');
+              alert("La cantidad ingresada de " + name + " " + size + " no puede ser menor o igual a cero.");
+              areProductsValidated = false;
+              return false;
+           }
+           
+           // validate the amount less or equal to the inventory
+           if (price <= 0) {
+         
+              $("#edit_receipt_or_invoice_button").removeAttr('disabled');
+              alert("El precio ingresado de " + name + " " + size + " no puede ser menor o igual a cero.");
+              areProductsValidated = false;
+              return false;
+           }
          
            // validate the amount less or equal to the inventory
            if (difference > inventory) {
@@ -165,15 +250,15 @@
            product.name = name;
            product.size = size;
            product.amount = amount;
+           product.price = price;
            product.inventory = inventory;
            product.invoiceStock = invoiceStock;
+           product.invoicePrice = invoicePrice;
            product.billType = billType;  
            
            // add the object to array
            bill[productsIndex] = product;
            productsIndex++;
-           
-          }
             
         });
         
@@ -196,7 +281,6 @@
            .editSaleOrDonation(bill);
         }
       }
-
     }
   
   

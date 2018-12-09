@@ -4,9 +4,96 @@
         
        $("#spinner").hide();
        
+       // color a table row background
+        $("#products_table tbody tr").click(setBackground); 
+        
+        // remove the .selected class from the row, detach it and append to the #selected_products_table. 
+        $("#products_table tbody tr").dblclick(appendToSelectedProducts);
+       
        $("#edit_waybill_button").click(processProducts);
         
     });
+    
+    
+       /**
+ * Remove a row from the products table to append it into the selected products table
+ */
+    function appendToSelectedProducts() {
+       
+       var products = $('#selected_products_table tbody tr').length;
+       
+       if (products > 0) {
+    
+       // disable the invoice id input
+        $("#invoice_id").prop("disabled", true );
+        $("#invoice_id_submit").prop("disabled", true );
+    
+        // remove the background
+        $(this).removeClass('selected');
+        
+        // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
+        // set double click event to append the row to products.
+        // set click event to set/unset the background
+        var id = $(this).find("td:first").html();
+        
+         // create the td with the change input on it
+         var tdChange = "<td><input id='q"+id+"' class='change_product' onchange='calculateCost(this)' type='number'/></td>";
+         
+         // create the td with the cost input on it
+         var tdCost = "<td><input id='c"+id+"' onchange='calculateCost(this)' type='number'/></td>";
+         
+         // create the td with the cost input on it
+         var tdShipping = "<td><input id='p"+id+"' onchange='calculateCost(this)' type='number' /></td>";
+         
+         // create the td with the cost input on it
+         var tdTotalCost = "<td><input id='t"+id+"' class='products_cost' type='number' disabled/></td>";
+         
+         // create the td with the cost input on it
+         var tdTotalShipping = "<td><input id='s"+id+"' class='products_shipping' type='number' disabled/></td>";
+         
+         // create the td with the change input on it
+         var tdInvoiceChange = "<td style='display:none;'>0</td>";
+         
+         // create the td with the cost input on it
+         var tdInvoiceCost = "<td style='display:none;'>0</td>";
+         
+         // create the td with the cost input on it
+         var tdInvoiceShipping = "<td style='display:none;'>0</td>";
+        
+        $(this).detach().clone().append(tdChange + tdCost + tdTotalCost + tdShipping + tdTotalShipping + tdInvoiceChange + tdInvoiceCost + tdInvoiceShipping).appendTo('#selected_products_table')
+                 .addClass('invoice_product')
+                 .dblclick(appendToProducts)
+                 .click(setBackground);
+         
+        // increase the amount of selected products  
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())+1);
+      }   
+    }
+   
+   /**
+ * Remove a row from the selected products table to append it into the products table
+ */
+    function appendToProducts() {
+    
+        // remove the last three input td
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        
+        // detach the row from the selected products table, remove the last td and append it to the #products table.
+        $(this).detach().clone().appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        
+        // decrease the amount of selected products
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
+        
+        calculateTotalCosts();
+    }  
+    
 
  /** 
  * Creates a array with the table information and calls the google app script function to process the spreadsheet
@@ -42,25 +129,27 @@
          var productSize = product[6];
          var productAmount = product[7];
          var productCost = product[8];
+         var productTotalCost = product[9];
          var productShipping = product[10];
+         var productTotalShipping = product[11];
          
          // create the td with the change input on it
-         var tdChange = "<td><input id='q"+productId+"' class='change_product' onchange='calculateCost(this)' type='number'/></td>";
+         var tdChange = "<td><input id='q"+productId+"' class='change_product' onchange='calculateCost(this)' type='number' value='"+productAmount+"'/></td>";
          
          // create the td with the cost input on it
-         var tdCost = "<td><input id='c"+productId+"' onchange='calculateCost(this)' type='number'/></td>";
+         var tdCost = "<td><input id='c"+productId+"' onchange='calculateCost(this)' type='number' value='"+productCost+"'/></td>";
          
          // create the td with the cost input on it
-         var tdShipping = "<td><input id='p"+productId+"' onchange='calculateCost(this)' type='number'/></td>";
+         var tdShipping = "<td><input id='p"+productId+"' onchange='calculateCost(this)' type='number' value='"+productShipping+"'/></td>";
          
          // create the td with the cost input on it
-         var tdTotalCost = "<td><input id='t"+productId+"' class='products_cost' type='number' disabled/></td>";
+         var tdTotalCost = "<td><input id='t"+productId+"' class='products_cost' type='number' value='"+productTotalCost+"' disabled/></td>";
          
          // create the td with the cost input on it
-         var tdTotalShipping = "<td><input id='s"+productId+"' class='products_shipping' type='number' disabled/></td>";
+         var tdTotalShipping = "<td><input id='s"+productId+"' class='products_shipping' type='number' value='"+productTotalShipping+"' disabled/></td>";
          
          // create the entire tr
-         var tr = "<tr class='invoice_product'><td>" + productId + "</td><td>" + productName + "</td><td>" + productSize + "</td><td>" + productAmount + "</td><td>" + productCost + "</td><td>" + productShipping + "</td>" + tdChange + tdCost + tdTotalCost + tdShipping + tdTotalShipping + "</tr>";
+         var tr = "<tr class='invoice_product'><td>" + productId + "</td><td>" + productName + "</td><td>" + productSize + "</td>" + tdChange + tdCost + tdTotalCost + tdShipping + tdTotalShipping + "<td style='display:none;'>" + productAmount + "</td><td style='display:none;'>" + productCost + "</td><td style='display:none;'>" + productShipping + "</td></tr>";
          
          // append the tr to the table tbody
          tbody.append(tr);
@@ -79,6 +168,8 @@
       $("#selected_products_count").text(Object.keys(json).length);
       
       $("#spinner").hide();
+      
+      calculateTotalCosts();
   }
   
   function calculateCost(e) {
@@ -178,22 +269,39 @@
          var id = $(this).find("td")[0].innerHTML;
          var name = $(this).find("td")[1].innerHTML;
          var size = $(this).find("td")[2].innerHTML;
-         var invoiceStock = $(this).find("td")[3].innerHTML;
-         var invoiceCost = $(this).find("td")[4].innerHTML;
+         var invoiceStock = $(this).find("td")[8].innerHTML;
+         var invoiceCost = $(this).find("td")[9].innerHTML;
+         var invoiceShipping = $(this).find("td")[10].innerHTML;
          
          //get the new amount and cost
          var amount = $(this).find("td input")[0].value;
          var cost = $(this).find("td input")[1].value;
          var shipping = $(this).find("td input")[3].value;
 
-          invoiceStock = parseInt(invoiceStock);
-          invoiceCost = parseInt(invoiceCost);
-          var amountVal = parseInt(amount);
-          var costVal = parseInt(cost);
+          if (!invoiceStock) {
+            invoiceStock = 0;
+          }
           
+          if (!invoiceCost) {
+            invoiceCost = 0;
+          }
+          
+          if (!invoiceShipping) {
+            invoiceShipping = 0;
+          }
+
+          //old values
+          invoiceStock = parseInt(invoiceStock);
+          invoiceCost = parseFloat(invoiceCost);
+          invoiceShipping = parseFloat(invoiceShipping);
+          
+          //new values
+          amount = parseInt(amount);
+          cost = parseFloat(cost);
+          shipping = parseFloat(shipping);
          
          //validate the amount greater than zero
-         if (amountVal <= 0) {
+         if (amount <= 0) {
          
             $("#edit_waybill_button").removeAttr('disabled');
             alert("La cantidad ingresada de " + name + " " + size + " debe ser mayor a 0.");
@@ -202,7 +310,7 @@
          }
          
          // validate the cost greater than zero
-         if (costVal <= 0) {
+         if (cost <= 0) {
          
             $("#edit_waybill_button").removeAttr('disabled');
             alert("La costo ingresado de " + name + " " + size + " deber ser mayor a 0.");
@@ -230,6 +338,7 @@
          product.size = size;
          product.invoiceStock = invoiceStock;
          product.invoiceCost = invoiceCost;
+         product.invoiceShipping = invoiceShipping;
          product.amount = amount;
          product.cost = cost;
          product.shipping = shipping;

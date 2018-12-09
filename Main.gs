@@ -8,20 +8,21 @@ function onOpen() {
       .createMenu('PyV')
       .addItem('Ingresar Guía', 'openAddWaybillDialog')
       .addItem('Editar Guía', 'openEditWaybillDialog')
+      .addItem('Eliminar productos de Guía', 'openRemoveWaybillProductsDialog')
       .addItem('Anular Guía', 'openReverseWaybillDialog')
       .addSeparator()
       .addItem('Comprar a Proveedores', 'openBuyToSuppliersDialog')
-      .addItem('Editar Factura de Compra', 'openEditSupplierInvoiceDialog')  
+      .addItem('Editar Factura de Compra', 'openEditSupplierInvoiceDialog')
+      .addItem('Eliminar productos de Factura de Compra', 'openRemoveInvoiceProductsDialog')  
       .addSeparator()
       .addItem('Facturar a Tiendas', 'openInvoiceWaybillDialog')
       .addItem('Editar Factura o Boleta', 'openEditReceiptOrInvoiceDialog')  
       .addSeparator()
       .addItem('Vender o Donar', 'openSellOrDonateDialog')
       .addItem('Editar Venta o Donación ', 'openEditSaleOrDonationDialog')
+      .addItem('Eliminar productos de Venta o Donación', 'openRemoveSaleProductsDialog')  
       .addSeparator()
-      .addItem('Crear Producto', 'openCreateProductDialog')  
-      .addSeparator()
-      .addItem('Test', 'LogTest')  
+      .addItem('Crear Producto', 'openCreateProductDialog')
       .addToUi();
 
 }
@@ -266,7 +267,7 @@ function findInvoiceProductCellRow(invoiceId, productId) {
     
     if (data[i][0] == invoiceId && data[i][4] == productId) {
       
-      var row = i+1;
+      var row = parseInt(i+1);
       return row;
     }
   }

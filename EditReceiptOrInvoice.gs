@@ -3,7 +3,7 @@
 */
 function openEditReceiptOrInvoiceDialog() {
   var html = HtmlService.createTemplateFromFile('edit_receipt_or_invoice')
-  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1400)
+  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1500)
   .setTitle('Dialog');
   SpreadsheetApp.getUi().showModalDialog(html, 'Editar Boleta o Factura');
 }
@@ -54,11 +54,8 @@ function getNotSoldProducts(store) {
      // set the formula to get the asked information
     cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, J, L, sum(I) where J='No Vendido' and K='"+store+"' group by G, F, H, J, L\")");
     
-    // find the inventory of each product
-    sheet.getRange(2,7,sheet.getLastRow()-1,1).setFormula("=IFERROR(INDEX(Productos!K:K;MATCH(A2;Productos!A:A;0);0))");
-  
 	// create a 2 dim area of the data in the carrier names column and codes 
-	var products = sheet.getRange(2, 1, sheet.getLastRow()-1, 7).getValues().reduce( 
+	var products = sheet.getRange(2, 1, sheet.getLastRow()-1, 6).getValues().reduce( 
 		function(p, c) { 
           
           // if the inventory is greater than zero, add it to the list
@@ -89,7 +86,7 @@ function getInvoiceProducts(selectedInvoiceId, selectedBill) {
     // set the formula to get the asked information
     cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, J, sum(I) where D="+selectedInvoiceId+ " and C='" + selectedBill + "' group by G,F,H,J\")");
     
-    // find the inventory of each product
+    // find the store inventory of each product
     sheet.getRange(2,6,sheet.getLastRow()-1,1).setFormula("=IFERROR(INDEX(Output1!F:F;MATCH(A2;Output1!A:A;0);0))");
   
 	// create a 2 dim area of the data in the carrier names column and codes 
@@ -111,20 +108,24 @@ function getInvoiceProducts(selectedInvoiceId, selectedBill) {
 
 function editReceiptOrInvoice(bill) {
  
-  var sheet = SpreadsheetApp.getActive().getSheetByName("Base de Datos");
-  var inventorySheet = SpreadsheetApp.getActive().getSheetByName('AutoInventario');
-  var lastRow = sheet.getLastRow()
+  var sheet = MemsheetApp.getSheet("Base de Datos");
+    
+  //sort the table preparing to do the multiple searches in order to update the inventory
+  SpreadsheetApp.getActive().getSheetByName("Productos").sort(1, true);
+  var productSheet = MemsheetApp.getSheet("Productos");
+  var productIdColumn = productSheet.getColumn(1);
+  
   
   // Iterate each waybill product and set its attributes in each column.
   for (var i=0; i<bill.length; i++) {
    
     var product = bill[i];
     
-    resetNotSoldWaybillProduct(product);
+    resetNotSoldWaybillProduct(product, sheet, productIdColumn);
     
-    changeStoreProductInventory(product);    
-
   }  
+  
+  return invoiceWaybill(bill);
 }
 
 function findReceiptOrInvoiceProductCellRow(product) {
@@ -161,31 +162,29 @@ function findReceiptOrInvoiceProductCellRow(product) {
 /**
 * Reset the waybills into 
 */
-function resetNotSoldWaybillProduct(product) {
+function resetNotSoldWaybillProduct(product, sheet, productIdColumn) {
  
-  var sheet = SpreadsheetApp.getActive().getSheetByName("Base de Datos");
-  var data = sheet.getRange("A:L").getValues();
   var billType = getSpanishBillType(product.billType);
   var productId = product.id;
   var waybillId = product.billId;
   
-  for (var i = data.length - 1; i >= 0; i--) {
+  for (var i = sheet.rows.length - 1; i >= 0; i--) {
     
-    if (data[i][3] == waybillId && data[i][5] == productId && data[i][2] == billType) {
+    if (sheet.rows[i][3] == waybillId && sheet.rows[i][5] == productId && sheet.rows[i][2] == billType) {
       
-        sheet.getRange(i+1,3).setValue("");
-        sheet.getRange(i+1,4).setValue("");
-        sheet.getRange(i+1,5).setValue("");
-        sheet.getRange(i+1,10).setValue("No Vendido");
-        sheet.getRange(i+1,12).setValue("");
+        sheet.getCell(i+1,3).setValue("");
+        sheet.getCell(i+1,4).setValue("");
+        sheet.getCell(i+1,5).setValue("");
+        sheet.getCell(i+1,10).setValue("No Vendido");
+        sheet.getCell(i+1,12).setValue("");
       
       // If the billtype is a chargeback, we have to reset the product inventory for a while.
       if (product.billType == "chargeback") {
         
-        var amount = sheet.getRange(i+1,9).getValue();
+        var amount = sheet.getCell(i+1,9).getValue();
         amount = parseInt(amount);
         
-        decreaseProductStock(productId, amount);
+        decreaseProductStock(productId, amount, productIdColumn);
         
       }
       
