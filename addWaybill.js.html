@@ -25,7 +25,7 @@
         // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
         // set double click event to append the row to products.
         // set click event to set/unset the background
-        $(this).detach().clone().append('<td><input id="q'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="p'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="t'+id+'" type="number" disabled/></td>').appendTo('#selected_products_table')
+        $(this).detach().clone().append('<td><input id="q'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="p'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="t'+id+'" class="products_price" type="number" disabled/></td>').appendTo('#selected_products_table')
                  .addClass('waybill_product')
                  .dblclick(appendToProducts)
                  .click(setBackground);
@@ -206,9 +206,30 @@
       
       $("#t"+productId).val(productTotal);
 
+      calculateTotalPrice();
       
    }
 
+   function calculateTotalPrice() {
+   
+      var totalProducts = 0;
+       
+      $(".products_price").each(function(index) {
+        
+        var value = $(this).val();
+        
+        if (!value) {
+          value = 0;
+        }
+        
+        totalProducts += parseFloat(value);
+        
+      });
+      
+      var totalInvoice = numberWithCommas(parseFloat(totalProducts).toFixed(0));
+      
+      $("#total_products").text("$"+totalInvoice);
+   }
 
    function addWaybillSuccessHandler(response) {
    

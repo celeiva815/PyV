@@ -68,6 +68,8 @@ function invoiceWaybill(bill) {
 function changeStoreProductInventory(product, sheet, productIdColumn, cloneRows) {
   
   var amount = parseInt(product.amount);
+  var price = parseInt(product.price);
+  var total = parseInt(product.total);
   var store = product.store;
   var waybillIds = [];
   var j = 0;
@@ -108,6 +110,8 @@ function changeStoreProductInventory(product, sheet, productIdColumn, cloneRows)
         
         //set the invoiced products in the actual row with the new amount
         sheet.getCell(i+1,9).setValue(amount);
+        sheet.getCell(i+1,12).setValue(price);
+        sheet.getCell(i+1,13).setValue(total);
         setInvoiceWaybillProduct(sheet, product, i+1);
         
         // if it's a chargeback, increase the inventory        
@@ -123,6 +127,10 @@ function changeStoreProductInventory(product, sheet, productIdColumn, cloneRows)
          
         //set the sold products
         setInvoiceWaybillProduct(sheet, product, i+1);
+        
+        //set the new price
+        sheet.getCell(i+1,12).setValue(price);
+        sheet.getCell(i+1,13).setValue(total);
         
         // if it's a chargeback, increase the inventory        
         if (product.billType == "chargeback") {

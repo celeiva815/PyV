@@ -221,8 +221,8 @@
       var productTotal = quantity * cost;
       var productTotalShipping = shipping * productTotal / 100;
       
-      $("#t"+productId).val(productTotal);
-      $("#s"+productId).val(productTotalShipping);
+      $("#t"+productId).val(productTotal.toFixed(0));
+      $("#s"+productId).val(productTotalShipping.toFixed(0));
       
       calculateTotalCosts();
 
@@ -257,11 +257,11 @@
          totalShipping += parseFloat(value);
       });
       
-      var totalInvoice = parseFloat(totalProducts + totalShipping);
+      var totalInvoice = numberWithCommas(parseFloat(totalProducts + totalShipping).toFixed(0));
       
-      $("#total_products").text("$"+totalProducts.toFixed(2));
-      $("#total_shipping").text("$"+totalShipping.toFixed(2));
-      $("#total_invoice").text("$"+totalInvoice.toFixed(2));
+      $("#total_products").text("$"+numberWithCommas(totalProducts.toFixed(0)));
+      $("#total_shipping").text("$"+numberWithCommas(totalShipping.toFixed(0)));
+      $("#total_invoice").text("$"+totalInvoice);
    
    }
 

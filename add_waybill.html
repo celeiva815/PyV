@@ -5,7 +5,7 @@
 <div class="content"> 
     <div class ="block">
     
-       <div class="two_columns">
+       <div class="three_columns">
         <label for="code">Última gúia creada: <?!=getLastWaybillCreated()?></label>
         <br>
         <label for="code">Número de guía de Despacho:</label>
@@ -20,7 +20,10 @@
                      { return "<option value='"+d[1]+"'>"+d[1]+"</option>"; }).join('\n');?> 
             </select> 
             </div>
-            <div class="two_columns">
+            <div class="three_columns">
+               <h2>Total Guía: <span id="total_products">$0.00</span></h2>
+            </div>
+            <div class="three_columns">
                
                <h2>Artículos por Despachar: <span id="selected_products_count">0</span></h2>
                <button id="add_waybills_button" class="process_button" type="button" onclick="this.disabled=true;">Ingresar Guía</button>
