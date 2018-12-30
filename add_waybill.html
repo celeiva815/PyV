@@ -9,7 +9,7 @@
         <label for="code">Última gúia creada: <?!=getLastWaybillCreated()?></label>
         <br>
         <label for="code">Número de guía de Despacho:</label>
-        <input id="waybill_number" type="number" value="<?!=parseInt(getLastWaybillCreated()) + 1?>" disabled/>
+        <input id="waybill_number" type="number" value="<?!=parseInt(getLastWaybillCreated()) + 1?>"/>
         <br>
         <label for="code">Fecha:</label>
         <input id="waybill_date" class="current_date" type="date"/>
@@ -28,7 +28,7 @@
             </div>
     </div>
     <div class="block"> 
-         <div class="two_columns">
+         <div class="three_columns">
           <h2>Productos Vigentes</h2>
          <input type="text" id="filter_table" class="filter_input" onkeyup="filterTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
          <table id="products_table" class="table table-hover row-clickable">
@@ -46,7 +46,7 @@
           </tbody>
          </table>
          </div>
-         <div class="two_columns">
+         <div class="two_three_columns">
          <h2>Productos Seleccionados</h2>
          <input type="text" id="filter_second_table" class="filter_input" onkeyup="filterSecondTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
          <table id="selected_products_table" class="table table-hover row-clickable">
@@ -57,6 +57,8 @@
                  <th>Tamaño</th> 
                  <th>Inventario</th>
                  <th>Cantidad</th>
+                 <th>Precio</th>
+                 <th>Total</th>
              </tr>
              </thead>
          </table>

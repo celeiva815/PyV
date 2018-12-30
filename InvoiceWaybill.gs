@@ -168,7 +168,7 @@ function changeStoreProductInventory(product, sheet, productIdColumn, cloneRows)
       
       if (product.billType == "chargeback") {
        
-        sheet.getCell(row,12).setValue(product.chargeback);
+        sheet.getCell(row,14).setValue(product.chargeback);
       }
       
       

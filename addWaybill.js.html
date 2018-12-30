@@ -20,11 +20,12 @@
     
         // remove the background
         $(this).removeClass('selected');
+        var id = $(this).find("td:first").html();
         
         // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
         // set double click event to append the row to products.
         // set click event to set/unset the background
-        $(this).detach().clone().append('<td><input type="number"/></td>').appendTo('#selected_products_table')
+        $(this).detach().clone().append('<td><input id="q'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="p'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="t'+id+'" type="number" disabled/></td>').appendTo('#selected_products_table')
                  .addClass('waybill_product')
                  .dblclick(appendToProducts)
                  .click(setBackground);
@@ -75,16 +76,29 @@
          var name = $(this).find("td")[1].innerHTML;
          var size = $(this).find("td")[2].innerHTML;
          var inventory = $(this).find("td")[3].innerHTML;
-         var amount = $(this).find("td:last input").val();
+         var amount = $(this).find("td input")[0].value;
+         var price = $(this).find("td input")[1].value;
+         var total = $(this).find("td input")[2].value;
 
           inventory = parseInt(inventory);
           amount = parseInt(amount);
+          price = parseInt(price);
+          total = parseInt(total);
          
          //validate the amount greater than zero
          if (!amount || amount <= 0) {
          
             $("#add_waybills_button").removeAttr('disabled');
             alert("La cantidad ingresada de " + name + " " + size + " debe ser mayor a 0.");
+            areProductsValidated = false;
+            return false;
+         }
+         
+         //validate the amount greater than zero
+         if (!price || price <= 0) {
+         
+            $("#add_waybills_button").removeAttr('disabled');
+            alert("El precio ingresado de " + name + " " + size + " debe ser mayor a 0.");
             areProductsValidated = false;
             return false;
          }
@@ -109,6 +123,8 @@
          product.name = name;
          product.size = size;
          product.amount = amount;
+         product.price = price;
+         product.total = total;
          
          // add the object to array
          waybill[index] = product;
@@ -171,6 +187,27 @@
       return true;
     
     }
+    
+    function calculatePrice(e) {
+   
+      // get the id
+      var id = e.id;
+      var productId = id.substring(1, id.length);
+      
+      // get the variables
+      var quantity = $("#q"+productId).val();
+      var price = $("#p"+productId).val();
+      
+      //parse the text
+      quantity = parseFloat(quantity);
+      price = parseFloat(price);
+      
+      var productTotal = quantity * price;
+      
+      $("#t"+productId).val(productTotal);
+
+      
+   }
 
 
    function addWaybillSuccessHandler(response) {
