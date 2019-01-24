@@ -21,10 +21,11 @@
         </div>
         <div class="three_columns">
         <label for="code">Vendido/Donado a:</label>
-          <select id="recipients">
+        <input id="store" type="text" list="recipients" />
+          <datalist id="recipients">
                  <?!=getActiveRecipients().map(function(d) 
                      { return "<option value='"+d[1]+"'>"+d[1]+"</option>"; }).join('\n');?> 
-          </select>
+          </datalist>
           <br>
           <label for="code">Fecha:</label>
           <input id="invoice_date" class="current_date" type="date"/>          

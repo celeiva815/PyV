@@ -149,7 +149,7 @@
       
       console.log(recipientName);
       // set the recipient
-      $("#recipients").val(recipientName);
+      $("#store").val(recipientName);
       
       var newDate = new Date(Date.parse(date));
       newDate.setHours(24);
@@ -195,7 +195,7 @@
        // get the values
        var billDate = $("#invoice_date").val();
        var billId = $("#invoice_id").val();
-       var store = $("#recipients").val();
+       var store = $("#store").val();
        var billType = $('input[name=bill]:checked').val();
        
         // Iterate each .waybill_product tr 
@@ -209,8 +209,8 @@
          var name = $(this).find("td")[1].innerHTML;
          var size = $(this).find("td")[2].innerHTML;
          var inventory = $(this).find("td")[3].innerHTML;
-         var invoiceStock = $(this).find("td")[6].innerHTML;
-         var invoicePrice = $(this).find("td")[7].innerHTML;
+         var invoiceStock = $(this).find("td")[7].innerHTML;
+         var invoicePrice = $(this).find("td")[8].innerHTML;
          var amount = $(this).find("td input")[0].value;
          var price = $(this).find("td input")[1].value;
          var total = $(this).find("td input")[2].value;
@@ -301,7 +301,7 @@
       // get the values
        var invoiceNumber = $("#invoice_id").val();
        var invoiceDate = $("#invoice_date").val();
-       var store = $("#recipients").val();
+       var store = $("#store").val();
        var billType = $('input[name=bill]:checked').val();
  
       // validate non-empty and greater than zero waybill number.
