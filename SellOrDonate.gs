@@ -3,7 +3,7 @@
 */
 function openSellOrDonateDialog() {
   var html = HtmlService.createTemplateFromFile('sell_or_donate')
-  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1300)
+  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1600)
   .setTitle('Dialog');
   SpreadsheetApp.getUi().showModalDialog(html, 'Vender o Donar desde la Bodega General');
 }
@@ -30,14 +30,14 @@ function sellOrDonateProducts(invoice) {
     var billType = getSpanishDonationType(product.billType);
     var billStatus = getSpanishDonationStatus(product.billType);
     
-    values[i] = new Array(product.billDate, billType, product.billId, product.id,product.name,product.size,product.amount, billStatus,product.store, product.price);
+    values[i] = new Array(product.billDate, billType, product.billId, product.id,product.name,product.size,product.amount, billStatus,product.store, product.price, product.total);
     
     // decrease stock of the product
     decreaseProductStock(product.id, product.amount, productIdColumn);
     
   }   
  
-  sheet.getRange(lastRow + 1,1,invoice.length, 10).setValues(values);
+  sheet.getRange(lastRow + 1,1,invoice.length, 11).setValues(values);
   MemsheetApp.flush();
   
 }

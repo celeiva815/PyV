@@ -27,8 +27,8 @@
           </select>
           <br>
           <label for="code">Fecha:</label>
-          <input id="invoice_date" class="current_date" type="date"/>
-          <br>
+          <input id="invoice_date" class="current_date" type="date"/>          
+          <h2 class="after_form">Total Guía: <span id="total_products">$0.00</span></h2>
         </div>
         <div class="three_columns">
           <button id="edit_receipt_or_invoice_button" class="process_button" type="button" onclick="this.disabled=true;">Editar Boleta o Factura</button>
@@ -66,6 +66,7 @@
                  <th>Inventario</th>
                  <th>Cantidad</th>
                  <th>Precio</th>
+                 <th>Total</th>
              </tr>
              </thead>
              <tbody>

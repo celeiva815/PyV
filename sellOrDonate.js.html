@@ -23,11 +23,12 @@
     
         // remove the background
         $(this).removeClass('selected');
+        var id = $(this).find("td:first").html();
         
         // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
         // set double click event to append the row to products.
         // set click event to set/unset the background
-        $(this).detach().clone().append('<td><input type="number"/></td><td><input type="number"/></td>').appendTo('#selected_products_table')
+        $(this).detach().clone().append('<td><input id="q'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="p'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="t'+id+'" class="products_price" type="number" disabled/></td>').appendTo('#selected_products_table')
                  .addClass('waybill_product')
                  .dblclick(appendToProducts)
                  .click(setBackground);
@@ -42,6 +43,7 @@
     function appendToProducts() {
     
         // remove the input td
+        $(this).find("td:last").remove();
         $(this).find("td:last").remove();
         $(this).find("td:last").remove();
         
@@ -83,10 +85,12 @@
          
          var amount = $(this).find("td input")[0].value;
          var price = $(this).find("td input")[1].value;
+         var total = $(this).find("td input")[2].value;
 
           inventory = parseInt(inventory);
           amount = parseInt(amount);
           price = parseInt(price);
+          total = parseInt(total);
          
          //validate the amount greater than zero to change only the products edited.
          if (amount <= 0) {
@@ -128,6 +132,7 @@
            product.size = size;
            product.amount = amount;
            product.price = price;
+           product.total = total;
            product.storeInventory = inventory;
            product.billType = billType;  
          
@@ -201,6 +206,50 @@
       return true;
     
     }
+
+    function calculatePrice(e) {
+   
+      // get the id
+      var id = e.id;
+      var productId = id.substring(1, id.length);
+      
+      // get the variables
+      var quantity = $("#q"+productId).val();
+      var price = $("#p"+productId).val();
+      
+      //parse the text
+      quantity = parseFloat(quantity);
+      price = parseFloat(price);
+      
+      var productTotal = quantity * price;
+      
+      $("#t"+productId).val(productTotal);
+
+      calculateTotalPrice();
+      
+   }
+
+   function calculateTotalPrice() {
+   
+      var totalProducts = 0;
+       
+      $(".products_price").each(function(index) {
+        
+        var value = $(this).val();
+        
+        if (!value) {
+          value = 0;
+        }
+        
+        totalProducts += parseFloat(value);
+        
+      });
+      
+      var totalInvoice = numberWithCommas(parseFloat(totalProducts).toFixed(0));
+      
+      $("#total_products").text("$"+totalInvoice);
+   }
+    
 
   function sellOrDonateProductsSuccessHandler(response) {
   
