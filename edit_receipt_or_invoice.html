@@ -26,6 +26,8 @@
           <label for="code">Fecha:</label>
           <input id="invoice_date" class="current_date" type="date"/>
           <br>
+          <h2>Total Factura: <span id="total_products">$0.00</span></h2>
+          <br>
           <div id="chargeback_reason">
             <label>Razón de la devolución:</label>
             <br>
@@ -40,7 +42,7 @@
         </div>
     </div>
     <div class="block"> 
-     <div class="two_columns">    
+     <div class="three_columns">    
          <h2>Otros Artículos en tienda como "No vendidos" </h2>
          <input type="text" id="filter_table" class="filter_input" onkeyup="filterTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
          <table id="products_table" class="table table-hover row-clickable">
@@ -56,7 +58,7 @@
           </tbody>
          </table>
          </div>
-         <div class="two_columns">
+         <div class="two_three_columns">
          <h2>Productos en Factura, Boleta o Guía de Devolución</h2>
          <input type="text" id="filter_second_table" class="filter_input" onkeyup="filterSecondTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
          <table id="selected_products_table" class="table table-hover row-clickable">
@@ -67,6 +69,8 @@
                  <th>Tamaño</th> 
                  <th>En Tienda</th>
                  <th>Cantidad</th>
+                 <th>Precio</th>
+                 <th>Total</th>
              </tr>
              </thead>
              <tbody>

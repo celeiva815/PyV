@@ -45,7 +45,7 @@
         $(this).find("td:last").remove();
         
         // detach the row from the selected products table, remove the last td and append it to the #products table.
-        $(this).detach().clone().appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        $(this).detach().clone().removeClass('waybill_product').appendTo('#products_table').dblclick(appendToSelectedProducts);    
         
         // decrease the amount of selected products
         $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
