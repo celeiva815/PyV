@@ -42,12 +42,11 @@
              <tr>
                  <th>Id</th>
                  <th >Artículo</th>
-                 <th>Tamaño</th> 
+                 <th>Tamaño</th>
+                 <th>Inventario</th>
              </tr> 
            </thead>
-           <tbody>
-           <?!=getActiveProducts().map(function(d)
-                     { return "<tr> <td>"+d[0]+"</td><td>"+d[2]+"</td><td>"+d[3]+"</td>"; }).join('\n');?>
+           <tbody>          
           </tbody>
          </table>
          </div>
