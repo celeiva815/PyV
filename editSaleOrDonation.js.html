@@ -44,9 +44,9 @@
         // set click event to set/unset the background
         var id = $(this).find("td:first").html();
         
-         var tdAmount = "<td><input id='q_"+id+"' onchange='calculatePrice(this)' type='number'/></td>"
-         var tdPrice = "<td><input id='p_"+id+"'onchange='calculatePrice(this)' type='number' /></td>"
-         var tdTotal = "<td><input id='t_"+id+"' class='products_price' type='number' disabled/></td>"
+         var tdAmount = "<td><input id='q"+id+"' onchange='calculatePrice(this)' type='number'/></td>"
+         var tdPrice = "<td><input id='p"+id+"'onchange='calculatePrice(this)' type='number' /></td>"
+         var tdTotal = "<td><input id='t"+id+"' class='products_price' type='number' disabled/></td>"
          var tdInvoiceAmount = "<td style='display:none;'>0</td>"
          var tdInvoicePrice = "<td style='display:none;'>0</td>"
         
@@ -131,13 +131,13 @@
          date = product[5];
          var productPrice = product[6];
          var productAmount = product[7];
-         var productTotal = product[8];
+         var productTotal = productPrice * productAmount;
          var productInventory = product[9]; //always has to be the last one
          
          
-         var tdAmount = "<td><input id='c_"+productId+"' onchange='calculatePrice(this)' type='number'value='"+productAmount+"'/></td>"
-         var tdPrice = "<td><input id='p_"+productId+"' onchange='calculatePrice(this)' type='number' value='"+productPrice+"'/></td>"
-         var tdTotal = "<td><input id='t_"+productId+"' class='products_price' type='number' value='"+productTotal+"' disabled/></td>"
+         var tdAmount = "<td><input id='q"+productId+"' onchange='calculatePrice(this)' type='number'value='"+productAmount+"'/></td>"
+         var tdPrice = "<td><input id='p"+productId+"' onchange='calculatePrice(this)' type='number' value='"+productPrice+"'/></td>"
+         var tdTotal = "<td><input id='t"+productId+"' class='products_price' type='number' value='"+productTotal+"' disabled/></td>"
          var tdInvoiceAmount = "<td style='display:none;'>"+productAmount+"</td>"
          var tdInvoicePrice = "<td style='display:none;'>"+productPrice+"</td>"
          

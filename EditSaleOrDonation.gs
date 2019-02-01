@@ -92,6 +92,7 @@ function editSaleOrDonation(invoice) {
   
   MemsheetApp.flush();
   
+  saveRecipient(product.store);
 }
 
 function findSaleOrDonationProductCellRow(waybillId, productId) {
