@@ -40,6 +40,8 @@ function sellOrDonateProducts(invoice) {
   sheet.getRange(lastRow + 1,1,invoice.length, 11).setValues(values);
   MemsheetApp.flush();
   
+  saveRecipient(product.store);
+  
 }
   function getSpanishDonationType(billType) {
    
@@ -63,3 +65,43 @@ function sellOrDonateProducts(invoice) {
       return "Donado";
     }  
   }
+
+ function saveRecipient(recipient) {
+  
+   var id = getRecipientId(recipient);
+   
+   if (!id) {
+     
+     var sheet = SpreadsheetApp.getActive().getSheetByName('Donatarios');
+     var lastRow = sheet.getLastRow()
+     var lastId = sheet.getRange(lastRow,1,1,1).getValue();
+     var values = [];
+     
+     id = parseInt(lastId) + 1;              
+     values[0] = new Array(id, recipient, 1);
+     
+     sheet.getRange(lastRow + 1,1,1,values[0].length).setValues(values);
+     SpreadsheetApp.flush();
+     
+     return true;       
+   } 
+ }
+
+function getRecipientId(recipient) {
+  
+    // get the data in the active sheet 
+	var sheet = getOutputSheet(2);
+   
+   // get the first cell of the output sheet
+    var cell = getOutputFirstCell(2);
+  
+    // get the amount of states that the waybill products have.
+    cell.setFormula("=QUERY('Donatarios'!A:C;\"select A where B='"+ recipient +"'\")");
+  
+    // get the amount of states that the waybill products have.
+    var id = sheet.getRange("A2").getValue();
+  
+    return id;
+  
+}
+
