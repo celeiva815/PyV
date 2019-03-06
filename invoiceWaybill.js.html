@@ -38,11 +38,15 @@
         // disable the waybill id input
         $("#stores").prop("disabled", true );
         var id = $(this).find("td:first").html();
+        
+        // get the last price and remove it.
+        var maxPrice = $(this).find("td:last").html();
+        $(this).find("td:last").remove();
     
         // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
         // set double click event to append the row to products.
         // set click event to set/unset the background
-        $(this).detach().clone().append('<td><input id="q'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="p'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="t'+id+'" class="products_price" type="number" disabled/></td>').appendTo('#selected_products_table')
+        $(this).detach().clone().append('<td><input id="q'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="p'+id+'" onchange="calculatePrice(this)" type="number" value="'+maxPrice+'"/></td><td><input id="t'+id+'" class="products_price" type="number" disabled/></td>').appendTo('#selected_products_table')
                  .addClass('waybill_product')
                  .dblclick(appendToProducts)
                  .click(setBackground);
@@ -55,6 +59,9 @@
  * Remove a row from the selected products table to append it into the products table
  */
     function appendToProducts() {
+    
+        var id = $(this).find("td:first").html();
+        var maxPrice = $("#p"+id).val();
             
         // remove the input td
         $(this).find("td:last").remove();
@@ -62,7 +69,7 @@
         $(this).find("td:last").remove();
         
         // detach the row from the selected products table, remove the last td and append it to the #products table.
-        $(this).detach().clone().removeClass('waybill_product').appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        $(this).detach().clone().append('<td>'+maxPrice+'</td>').removeClass('waybill_product').appendTo('#products_table').dblclick(appendToSelectedProducts);    
         
         // decrease the amount of selected products
         $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
@@ -75,6 +82,7 @@
      
         // get the store selected 
         var storeName = $("#stores").find(":selected").text();
+        $("#spinner").show();
         
         // run the server-side function to get the products.
         google.script.run.withSuccessHandler(selectStoreSuccessHandler).getProductsStore(storeName);     
@@ -84,7 +92,8 @@
 * Receives the products found when searching products.
 */
   function selectStoreSuccessHandler(products) {
-    
+  
+     $("#spinner").hide();
      var json = JSON.parse(products);
      var tbody = $('#products_table tbody');
      
@@ -97,9 +106,10 @@
          var productId = product[0];
          var productName = product[1];
          var productSize = product[2];
-         var productInventory = product[4]; 
+         var productInventory = product[4];
+         var productMaxPrice = product[5];
          
-         var tr = "<tr><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td></tr>";
+         var tr = "<tr><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td><td>"+productMaxPrice+"</td></tr>";
          
          tbody.append(tr);
          

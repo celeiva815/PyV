@@ -3,16 +3,16 @@
 */
 function openEditWaybillDialog() {
   var html = HtmlService.createTemplateFromFile('edit_waybill')
-  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1300)
+  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1700)
   .setTitle('Dialog');
   SpreadsheetApp.getUi().showModalDialog(html, 'Editar Guía de Despacho');
 }
 
 
 /**
-* Gets the not sold products of a waybill, based on its id.
+* Gets the products of a waybill, based on its id.
 */
-function getNotSoldWaybillProducts(selectedWaybillId) {
+function getWaybillProducts(selectedWaybillId) {
   
    // get the data in the active sheet 
 	var sheet = getOutputSheet(1);
@@ -21,7 +21,7 @@ function getNotSoldWaybillProducts(selectedWaybillId) {
     var cell = getOutputFirstCell(1);
   
     // get the Not Sold products of a waybill
-    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, B, L, sum(I) where J='No Vendido' and A="+selectedWaybillId+" group by G, F, H, B, L\")");
+    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, J, I, L where A="+selectedWaybillId+" order by J desc \")");
   
     // find the inventory of each product
     sheet.getRange(2,7,sheet.getLastRow()-1,1).setFormula("=IFERROR(INDEX(Productos!K:K;MATCH(A2;Productos!A:A;0);0))");
@@ -103,7 +103,6 @@ function editWaybill(waybill) {
   var productsSheet = MemsheetApp.getSheet("Productos");
   var sheet = MemsheetApp.getSheet("Base de Datos");
   
-  console.time("edit iteration");
   // Iterate each waybill product and set its attributes in each column.
   for (var i=0; i<waybill.length; i++) {
    
@@ -111,16 +110,32 @@ function editWaybill(waybill) {
     
     var row = findWaybillProductCellRow(product.waybillNumber, product.id, sheet);
     
+    // if there is no row, it means it's a new product, so add it at the final of the table.
+    if (!row) {
+      
+      row = sheet.getLastRow() + 1;
+    }
+    
+    sheet.getCell(row,1).setValue(product.waybillNumber);
+    sheet.getCell(row,2).setValue(product.waybillDate);
+    sheet.getCell(row,3).setValue('');
+    sheet.getCell(row,4).setValue('');
+    sheet.getCell(row,5).setValue('');
+    sheet.getCell(row,6).setValue(product.id);
+    sheet.getCell(row,7).setValue(product.name);
+    sheet.getCell(row,8).setValue(product.size);
     sheet.getCell(row,9).setValue(product.amount);
+    sheet.getCell(row,10).setValue(product.status);
+    sheet.getCell(row,11).setValue(product.store);
+    sheet.getCell(row,12).setValue(product.price);
+    sheet.getCell(row,13).setValue(product.total);
+    
     
     // decrease stock of the product
-    decreaseProductStock(product.id, product.amount - product.waybillStock, productsSheet.getColumn(1));
+    decreaseProductStock(product.id, parseInt(product.amount) - parseInt(product.waybillAmount), productsSheet.getColumn(1));
   }
-  console.timeEnd("edit iteration");
   
-  console.time("edit flush");
   MemsheetApp.flush();
-  console.timeEnd("edit flush");
   
 }
   

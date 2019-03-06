@@ -6,7 +6,7 @@
 <div class="content"> 
     <div class ="block">
     
-       <div class="two_columns">
+       <div class="three_columns">
         <form action="javascript:searchProducts()">
         <label for="code">Ingrese el número de la guía:</label>
         <input id="waybill_id" type="number"/>
@@ -22,14 +22,17 @@
                      { return "<option value='"+d[1]+"'>"+d[1]+"</option>"; }).join('\n');?> 
             </select> 
         </div>
-        <div class="two_columns">
+        <div class="three_columns">
+            <h2 class="after_form">Total Guía: <span id="total_products">$0.00</span></h2>
+        </div>
+        <div class="three_columns">
             <button id="edit_waybill_button" class="process_button" type="button" onclick="this.disabled=true;">Editar Guía de Despacho</button>
             <img id="spinner" src="https://drive.google.com/uc?export=download&amp;id=1d1UkmZaPE_r37hGwCdxtodrgbEfFm12W" style="width: 50px; position: absolute;">
         </div>
     </div>
     <div class="block"> 
-     <div class="two_columns">    
-         <h2>Productos No Vendidos</h2>
+     <div class="three_columns">    
+         <h2>Productos en Inventario</h2>
          <input type="text" id="filter_table" class="filter_input" onkeyup="filterTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
          <table id="products_table" class="table table-hover row-clickable">
            <thead>
@@ -37,27 +40,29 @@
                  <th>Id</th>
                  <th width="40%">Artículo</th>
                  <th>Tamaño</th> 
-                 <th>En Guía</th>
                  <th>Inventario</th>
-                 <th>Cambiar por</th>
              </tr> 
            </thead>
            <tbody>
+            <?!=getActiveProducts().map(function(d)
+                     { return "<tr> <td>"+d[0]+"</td><td>"+d[2]+"</td><td>"+d[3]+"</td><td>"+d[10]+"</td>"; }).join('\n');?>
           </tbody>
          </table>
          </div>
-         <div class="two_columns">
+         <div class="two_three_columns">
          <h2>Productos Vendidos o Devueltos</h2>
          <input type="text" id="filter_second_table" class="filter_input" onkeyup="filterSecondTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
          <table id="selected_products_table" class="table table-hover row-clickable">
          <thead>
              <tr>
                  <th>Id</th>
-                 <th width="40%">Artículo</th>
-                 <th>Tamaño</th>
-                 <th>Cantidad</th>
-                 <th>Inventario</th>
-                 <th>Estado</th>
+                 <th width="30%">Artículo</th>
+                 <th class='number_aligned'>Tamaño</th>
+                 <th class='number_aligned'>Inventario</th>
+                 <th class='padding_left'>Estado</th>
+                 <th class='number_aligned'>Cantidad</th>
+                 <th class='number_aligned'>Precio</th>
+                 <th class='number_aligned'>Total</th>
              </tr>
              </thead>
              <tbody>

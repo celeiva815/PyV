@@ -25,7 +25,7 @@ function addWaybill(waybill) {
   var productSheet = MemsheetApp.getSheet("Productos");
   var productIdColumn = productSheet.getColumn(1);
   
-  if (waybill.length > 0) {
+  /*if (waybill.length > 0) {
    
     var waybillId = waybill[0].waybillNumber;
     
@@ -33,7 +33,7 @@ function addWaybill(waybill) {
        return -1;  
     }
     
-  }
+  }*/
   
   var values = []
   

@@ -3,7 +3,7 @@
 */
 function openInvoiceWaybillDialog() {
   var html = HtmlService.createTemplateFromFile('invoice_waybill')
-  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1500)
+  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1600)
   .setTitle('Dialog');
   SpreadsheetApp.getUi().showModalDialog(html, 'Nueva Boleta, Factura o Guía de Devolución');
 }
@@ -18,10 +18,10 @@ function getProductsStore(selectedStoreName) {
   
     var cell = getOutputFirstCell(1);
   
-    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, K, sum(I) where J='No Vendido' and K='"+selectedStoreName+"' group by G, F, H, K\")");
+    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, K, sum(I), max(L) where J='No Vendido' and K='"+selectedStoreName+"' group by G, F, H, K\")");
   
 	// create a 2 dim area of the data in the carrier names column and codes 
-	var products = sheet.getRange(2, 1, sheet.getLastRow() -1, 5).getValues().reduce( 
+	var products = sheet.getRange(2, 1, sheet.getLastRow() -1, 6).getValues().reduce( 
 		function(p, c) { 
           
           // add the product to the list

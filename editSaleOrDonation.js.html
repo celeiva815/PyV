@@ -95,6 +95,9 @@
  * Creates a array with the table information and calls the google app script function to process the spreadsheet
  */
     function searchDonatedProducts() {
+    
+        $("#spinner").show();
+        $("#invoice_id_submit").prop("disabled", true );
      
         // get the invoice id 
         var invoiceId = $("#invoice_id").val();
@@ -173,6 +176,9 @@
         
         // remove the .selected class from the row, detach it and append to the #selected_products_table. 
         $("#products_table tbody tr").dblclick(appendToSelectedProducts);
+        
+        $("#spinner").hide();
+        $("#invoice_id_submit").prop("disabled", false );
         
         calculateTotalPrice();
         

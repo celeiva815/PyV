@@ -9,7 +9,7 @@
         <label for="code">Última gúia creada: <?!=getLastWaybillCreated()?></label>
         <br>
         <label for="code">Número de guía de Despacho:</label>
-        <input id="waybill_number" type="number" value="<?!=parseInt(getLastWaybillCreated()) + 1?>"/>
+        <input id="waybill_number" type="number" onchange="javascript:searchWaybillProperties()" value="<?!=parseInt(getLastWaybillCreated()) + 1?>"/>
         <br>
         <label for="code">Fecha:</label>
         <input id="waybill_date" class="current_date" type="date"/>

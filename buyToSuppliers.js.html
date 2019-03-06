@@ -69,6 +69,7 @@
      
         // get the store selected 
         var storeName = $("#stores").find(":selected").text();
+        $("#spinner").show();
         console.log(storeName);
         
         // run the server-side function to get the products.
@@ -107,6 +108,8 @@
         
         // remove the .selected class from the row, detach it and append to the #selected_products_table. 
         $("#products_table tbody tr").dblclick(appendToSelectedProducts);
+        
+        $("#spinner").hide();
       
   }
 

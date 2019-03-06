@@ -50,6 +50,47 @@
         // decrease the amount of selected products
         $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
     }
+    
+     /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function searchWaybillProperties() {
+     
+        $("#spinner").show();
+        // get the waybill id 
+        var waybillId = $("#waybill_number").val();
+        console.log(waybillId);
+        
+        // run the server-side function to get the products.
+        google.script.run.withSuccessHandler(searchWaybillPropertiesSuccessHandler).getWaybillProperties(waybillId);     
+    }
+    
+    /**
+* Receives the waybill properties found when searching the invoice.
+*/
+  function searchWaybillPropertiesSuccessHandler(properties) {
+    
+    $("#spinner").hide();
+    var json = JSON.parse(properties);
+      
+      var store = json[0];
+      var date = json[1];
+      
+
+      if (store && date) 
+      {
+         // set the store
+         $("#stores").val(store);
+      
+         // set the date
+         var newDate = new Date(Date.parse(date));
+         newDate.setHours(24);
+         document.getElementById("waybill_date").valueAsDate = newDate;
+      }
+      
+      
+
+  };
 
  /** 
  * Creates a array with the table information and calls the google app script function to process the spreadsheet

@@ -98,6 +98,8 @@
     }  
     
     function selectStore() {
+    
+        $("#spinner").show();
      
         // get the store selected 
         var storeName = $("#suppliers").find(":selected").text();
@@ -113,6 +115,7 @@
 */
   function selectStoreSuccessHandler(products) {
     
+    $("#spinner").hide();
      var json = JSON.parse(products);
      var tbody = $('#products_table tbody');
      
