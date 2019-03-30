@@ -9,15 +9,17 @@
           <label for="code">Ingrese el tipo y número de documento:</label>
           <br>
           <form action="javascript:searchProducts()">
+            <input id="invoice_id" type="number" placeholder="Nº"/><br>
             <input type="radio" name="bill" value="invoice"> Factura<br>
             <input type="radio" name="bill" value="receipt"> Boleta<br>
             <input type="radio" name="bill" value="chargeback"> Guía de Devolución<br>
-            <input id="invoice_id" type="number"/>
+            <label for="code">Fecha:</label>
+            <input id="invoice_date" class="current_date" type="date"/>
             <input id="invoice_id_submit" type="submit" value="Buscar">
           </form>  
         </div>
         <div class="three_columns">
-        <label for="code">Tienda de Destino</label>
+        <label for="code">Tienda de la Factura</label>
           <select id="stores">
                  <?!=getActiveStores().map(function(d) 
                      { return "<option value='"+d[1]+"'>"+d[1]+"</option>"; }).join('\n');?> 
@@ -37,7 +39,7 @@
         </div>
         <div class="three_columns">
           <h2>Artículos Agregados: <span id="selected_products_count">0</span></h2>
-          <button id="edit_receipt_or_invoice_button" class="process_button" type="button" onclick="this.disabled=true;">Editar Guía de Despacho</button>
+          <button id="edit_receipt_or_invoice_button" class="process_button" type="button" onclick="this.disabled=true;">Editar</button>
           <img id="spinner" src="https://drive.google.com/uc?export=download&amp;id=1d1UkmZaPE_r37hGwCdxtodrgbEfFm12W" style="width: 50px; position: absolute;">
         </div>
     </div>

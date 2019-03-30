@@ -80,9 +80,12 @@
         
         // get the invoice bill 
         var invoiceBill = getInvoiceBill();
+        
+        // get the date  
+        var invoiceDate = $("#invoice_date").val();
  
         // run the server-side function to get the products.
-        google.script.run.withSuccessHandler(searchInvoicePropertiesSuccessHandler).getInvoiceProperties(invoiceId, invoiceBill);     
+        google.script.run.withSuccessHandler(searchInvoicePropertiesSuccessHandler).getInvoiceProperties(invoiceId, invoiceBill, invoiceDate);     
  }
 
  /** 
@@ -96,8 +99,11 @@
         // get the invoice bill 
         var invoiceBill = getInvoiceBill();
         
+        // get the date  
+        var invoiceDate = $("#invoice_date").val();
+        
         // run the server-side function to get the products.
-        google.script.run.withSuccessHandler(searchInvoiceProductsSuccessHandler).getInvoiceProducts(invoiceId, invoiceBill);     
+        google.script.run.withSuccessHandler(searchInvoiceProductsSuccessHandler).getInvoiceProducts(invoiceId, invoiceBill, invoiceDate);     
     }
 
 
@@ -118,23 +124,25 @@
       var json = JSON.parse(properties);
       
       var store = json[0];
-      var date = json[1];
-      var chargeback = json[2];
-      var bill = json[3];
+      var chargeback = json[1];
+      var bill = json[2];
       
+      console.log(store);
       // set the store
       $("#stores").val(store);
       
-      // set the date
+      /* set the date
       var newDate = new Date(Date.parse(date));
       newDate.setHours(24);
-      document.getElementById("invoice_date").valueAsDate = newDate;
+      document.getElementById("invoice_date").valueAsDate = newDate;*/
      
       // set the chargeback reason
       $("#chargeback_input").val(chargeback);
       
       // search the not sold products based on the store
       searchNotSoldProducts(store);
+      
+      searchInvoiceProducts();
   };
   
 
@@ -214,8 +222,7 @@
         
         // remove the .selected class from the row, detach it and append to the #selected_products_table. 
         $("#products_table tbody tr").dblclick(appendToSelectedProducts);
-        
-        searchInvoiceProducts();
+       
   };
   
   function getInvoiceBill() {
