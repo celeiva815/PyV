@@ -40,7 +40,7 @@ function sellOrDonateProducts(invoice) {
   sheet.getRange(lastRow + 1,1,invoice.length, 11).setValues(values);
   MemsheetApp.flush();
   
-  saveRecipient(product.store);
+  saveRecipient(product.store, product.email, product.phone);
   
 }
   function getSpanishDonationType(billType) {
@@ -66,25 +66,32 @@ function sellOrDonateProducts(invoice) {
     }  
   }
 
- function saveRecipient(recipient) {
+ function saveRecipient(recipient, email, phone) {
   
-   var id = getRecipientId(recipient);
+   var row = findRecipientCellRow(recipient);
+   var sheet = MemsheetApp.getSheet('Donatarios');
+   var values = [];
    
-   if (!id) {
+   if (!row) {
+
+     row = sheet.getLastRow()
+     var lastId = sheet.getRange(lastRow,1,1,1).getValue(); 
+     var id = parseInt(lastId) + 1;
      
-     var sheet = SpreadsheetApp.getActive().getSheetByName('Donatarios');
-     var lastRow = sheet.getLastRow()
-     var lastId = sheet.getRange(lastRow,1,1,1).getValue();
-     var values = [];
+     values[0] = new Array(id, recipient, 1, email, phone);
      
-     id = parseInt(lastId) + 1;              
-     values[0] = new Array(id, recipient, 1);
+     sheet.getRange(row + 1,1,1,values[0].length).setValues(values);
+     MemsheetApp.flush();
      
-     sheet.getRange(lastRow + 1,1,1,values[0].length).setValues(values);
-     SpreadsheetApp.flush();
+     return true;    
      
-     return true;       
-   } 
+   } else {
+     
+     values[0] = new Array(recipient, 1, email, phone);
+     sheet.getActiveSheet().getRange(row,2,1,values[0].length).setValues(values);
+     MemsheetApp.flush();
+     return true;
+   }
  }
 
 function getRecipientId(recipient) {
@@ -105,3 +112,41 @@ function getRecipientId(recipient) {
   
 }
 
+function getContactInfo(recipient) {
+  
+    // get the data in the active sheet 
+	var sheet = getOutputSheet(1);
+   
+   // get the first cell of the output sheet
+    var cell = getOutputFirstCell(1);
+  
+    // get the amount of states that the waybill products have.
+    cell.setFormula("=QUERY('Donatarios'!A:E;\"select D, E where B='"+ recipient +"'\")");
+  
+    var contactInfo = [];
+    // get the amount of states that the waybill products have.
+    var email = sheet.getRange("A2").getValue();
+    var phone = sheet.getRange("B2").getValue();
+  
+    contactInfo.push(email);
+    contactInfo.push(phone);
+  
+    return JSON.stringify(contactInfo);
+}
+
+function findRecipientCellRow(recipient) {
+    
+  var sheet = SpreadsheetApp.getActive().getSheetByName("Donatarios");
+  var data = sheet.getRange("A:E").getValues();
+  
+  for (var i = data.length - 1; i >= 0; i--) {
+    
+    if (data[i][1] == recipient) {
+      
+      var row = i+1;
+      return row;
+    }
+  }
+  
+  return 0;
+}

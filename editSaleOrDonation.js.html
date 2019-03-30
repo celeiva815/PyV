@@ -18,6 +18,8 @@
             }
         });
         
+        $("#store").focusout(getContactInfo);
+        
         $("#edit_receipt_or_invoice_button").click(processProducts);
         $("#spinner").hide();
         
@@ -81,6 +83,49 @@
         
         calculateTotalPrice();
     }  
+    
+     function getContactInfo() {
+    
+     var store = $("#store").val();
+     
+     if (!store) {
+       return;
+     }
+     
+     $("#spinner").show();
+          
+           google.script.run
+           .withSuccessHandler(getContactInfoSuccessHandler)
+           .getContactInfo(store);
+       
+    }
+    
+    function getContactInfoSuccessHandler(response) {
+    
+    $("#spinner").hide();
+    
+    
+    var json = JSON.parse(response); 
+    var email = json[0];
+    var phone = json[1];
+   
+   if(!email) {
+    $("#email").attr("placeholder", "Ingrese un correo");
+    $("#email").val("");
+   } else {
+    $("#email").val(email);
+    $("#email").attr("placeholder", "");
+   }
+   
+   if(!phone) {
+    $("#phone").attr("placeholder", "Ingrese un teléfono");
+    $("#phone").val("");
+   } else {
+    $("#phone").val(phone);
+    $("#phone").attr("placeholder", "");
+   }
+   
+  }
     
 
  /** 
@@ -182,6 +227,8 @@
         
         calculateTotalPrice();
         
+        getContactInfo();
+        
       
   }
   
@@ -202,6 +249,8 @@
        var billDate = $("#invoice_date").val();
        var billId = $("#invoice_id").val();
        var store = $("#store").val();
+       var email = $("#email").val();
+       var phone = $("#phone").val();
        var billType = $('input[name=bill]:checked').val();
        
         // Iterate each .waybill_product tr 
@@ -263,6 +312,8 @@
            product.billDate = billDate;
            product.billId = billId;
            product.store = store;
+           product.email = email;
+           product.phone = phone;
            product.id = id;
            product.name = name;
            product.size = size;

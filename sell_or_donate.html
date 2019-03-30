@@ -22,12 +22,18 @@
         <label for="code">Fecha:</label>
         <input id="invoice_date" class="current_date" type="date"/>
         <br>
-        <label for="code">Donado a:</label>
+        <label for="store">Donado a:</label>
           <input id="store" type="text" list="recipients" />
           <datalist id="recipients">
           <?!=getActiveRecipients().map(function(d) 
                      { return "<option value='"+d[1]+"'>"+d[1]+"</option>"; }).join('\n');?>
           </datalist>
+          <br>
+          <label for="email">Mail:</label>
+          <input id="email" type="email" autocomplete="off"/>
+          <br>
+          <label for="mail">Teléfono:</label>
+          <input id="phone" type="text" autocomplete="off"/>
           <h2>Total Guía: <span id="total_products">$0.00</span></h2>
        </div>
        
