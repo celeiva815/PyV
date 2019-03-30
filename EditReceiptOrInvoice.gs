@@ -11,7 +11,7 @@ function openEditReceiptOrInvoiceDialog() {
 /**
 * Gets the store of an invoice, based on its id.
 */
-function getInvoiceProperties(selectedInvoiceId, selectedBill) {
+function getInvoiceProperties(selectedInvoiceId, selectedBill, selectedDate) {
 
     // get the output2 sheet
     var sheet = getOutputSheet(2);
@@ -20,19 +20,21 @@ function getInvoiceProperties(selectedInvoiceId, selectedBill) {
     var cell = getOutputFirstCell(2) 
     
     var properties = [];
-    
+  
+    var date = new Date(Date.parse(selectedDate));
+    var month = date.getMonth();  
+    var year = date.getFullYear();
+
     // set the formula to get the asked information
-    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select K, L, E, C where D=" + selectedInvoiceId + " and C='" + selectedBill + "'\")");
+    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select K, L, C where D=" + selectedInvoiceId + " and C='" + selectedBill + "' and month(E)=" + month + " and year(E)=" + year + "\")");
     
 	// create a 2 dim area of the data in the carrier names column and codes 
 	var store = sheet.getRange("A2").getValue();
     var chargeback = sheet.getRange("B2").getValue();
-    var date = sheet.getRange("C2").getValue();
-    var bill = sheet.getRange("D2").getValue();
+    var bill = sheet.getRange("C2").getValue();
   
     // add the properties to the array
     properties.push(store);
-    properties.push(date);
     properties.push(chargeback);
     properties.push(bill);
   
@@ -55,7 +57,11 @@ function getNotSoldProducts(store) {
     cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, J, L, sum(I) where J='No Vendido' and K='"+store+"' group by G, F, H, J, L\")");
     
 	// create a 2 dim area of the data in the carrier names column and codes 
-	var products = sheet.getRange(2, 1, sheet.getLastRow()-1, 6).getValues().reduce( 
+	var products = sheet.getRange(2, 1, sheet.getLastRow()-1, 6).getValues();
+  
+  if (products.length > 0) {
+   
+    products.reduce( 
 		function(p, c) { 
           
           // if the inventory is greater than zero, add it to the list
@@ -67,6 +73,8 @@ function getNotSoldProducts(store) {
           }
 			return p; 
 		}, []); 
+  }
+ 
   
     return JSON.stringify(products);
 }
@@ -75,7 +83,7 @@ function getNotSoldProducts(store) {
 /**
 * Gets the products of an invoice, based on its id.
 */
-function getInvoiceProducts(selectedInvoiceId, selectedBill) {
+function getInvoiceProducts(selectedInvoiceId, selectedBill, selectedDate) {
 
     // get the output2 sheet
     var sheet = getOutputSheet(2);
@@ -83,8 +91,12 @@ function getInvoiceProducts(selectedInvoiceId, selectedBill) {
     // get the first cell of the Output2 sheet
     var cell = getOutputFirstCell(2) 
     
+    var date = new Date(Date.parse(selectedDate));
+    var month = date.getMonth();  
+    var year = date.getFullYear();
+    
     // set the formula to get the asked information
-    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, J, sum(I) where D="+selectedInvoiceId+ " and C='" + selectedBill + "' group by G,F,H,J\")");
+    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, J, sum(I) where D="+selectedInvoiceId+ " and C='" + selectedBill + "' and month(E)=" + month + " and year(E)=" + year + " group by G,F,H,J\")");
     
     // find the store inventory of each product
     sheet.getRange(2,6,sheet.getLastRow()-1,1).setFormula("=IFERROR(INDEX(Output1!F:F;MATCH(A2;Output1!A:A;0);0))");
