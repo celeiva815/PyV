@@ -20,11 +20,12 @@
     
         // remove the background
         $(this).removeClass('selected');
+        var id = $(this).find("td:first").html();
         
         // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
         // set double click event to append the row to products.
         // set click event to set/unset the background
-        $(this).detach().clone().append('<td><input type="number"/></td>').appendTo('#selected_products_table')
+        $(this).detach().clone().append('<td><input id="q'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="p'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="t'+id+'" class="products_price" type="number" disabled/></td>').appendTo('#selected_products_table')
                  .addClass('waybill_product')
                  .dblclick(appendToProducts)
                  .click(setBackground);
@@ -40,6 +41,8 @@
     
         // remove the input td
         $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
         
         // detach the row from the selected products table, remove the last td and append it to the #products table.
         $(this).detach().clone().removeClass('waybill_product').appendTo('#products_table').dblclick(appendToSelectedProducts);    
@@ -47,6 +50,47 @@
         // decrease the amount of selected products
         $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
     }
+    
+     /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function searchWaybillProperties() {
+     
+        $("#spinner").show();
+        // get the waybill id 
+        var waybillId = $("#waybill_number").val();
+        console.log(waybillId);
+        
+        // run the server-side function to get the products.
+        google.script.run.withSuccessHandler(searchWaybillPropertiesSuccessHandler).getWaybillProperties(waybillId);     
+    }
+    
+    /**
+* Receives the waybill properties found when searching the invoice.
+*/
+  function searchWaybillPropertiesSuccessHandler(properties) {
+    
+    $("#spinner").hide();
+    var json = JSON.parse(properties);
+      
+      var store = json[0];
+      var date = json[1];
+      
+
+      if (store && date) 
+      {
+         // set the store
+         $("#stores").val(store);
+      
+         // set the date
+         var newDate = new Date(Date.parse(date));
+         newDate.setHours(24);
+         document.getElementById("waybill_date").valueAsDate = newDate;
+      }
+      
+      
+
+  };
 
  /** 
  * Creates a array with the table information and calls the google app script function to process the spreadsheet
@@ -75,16 +119,29 @@
          var name = $(this).find("td")[1].innerHTML;
          var size = $(this).find("td")[2].innerHTML;
          var inventory = $(this).find("td")[3].innerHTML;
-         var amount = $(this).find("td:last input").val();
+         var amount = $(this).find("td input")[0].value;
+         var price = $(this).find("td input")[1].value;
+         var total = $(this).find("td input")[2].value;
 
           inventory = parseInt(inventory);
           amount = parseInt(amount);
+          price = parseInt(price);
+          total = parseInt(total);
          
          //validate the amount greater than zero
          if (!amount || amount <= 0) {
          
             $("#add_waybills_button").removeAttr('disabled');
             alert("La cantidad ingresada de " + name + " " + size + " debe ser mayor a 0.");
+            areProductsValidated = false;
+            return false;
+         }
+         
+         //validate the amount greater than zero
+         if (!price || price <= 0) {
+         
+            $("#add_waybills_button").removeAttr('disabled');
+            alert("El precio ingresado de " + name + " " + size + " debe ser mayor a 0.");
             areProductsValidated = false;
             return false;
          }
@@ -109,6 +166,8 @@
          product.name = name;
          product.size = size;
          product.amount = amount;
+         product.price = price;
+         product.total = total;
          
          // add the object to array
          waybill[index] = product;
@@ -171,7 +230,49 @@
       return true;
     
     }
+    
+    function calculatePrice(e) {
+   
+      // get the id
+      var id = e.id;
+      var productId = id.substring(1, id.length);
+      
+      // get the variables
+      var quantity = $("#q"+productId).val();
+      var price = $("#p"+productId).val();
+      
+      //parse the text
+      quantity = parseFloat(quantity);
+      price = parseFloat(price);
+      
+      var productTotal = quantity * price;
+      
+      $("#t"+productId).val(productTotal);
 
+      calculateTotalPrice();
+      
+   }
+
+   function calculateTotalPrice() {
+   
+      var totalProducts = 0;
+       
+      $(".products_price").each(function(index) {
+        
+        var value = $(this).val();
+        
+        if (!value) {
+          value = 0;
+        }
+        
+        totalProducts += parseFloat(value);
+        
+      });
+      
+      var totalInvoice = numberWithCommas(parseFloat(totalProducts).toFixed(0));
+      
+      $("#total_products").text("$"+totalInvoice);
+   }
 
    function addWaybillSuccessHandler(response) {
    

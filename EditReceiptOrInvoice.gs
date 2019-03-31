@@ -96,13 +96,13 @@ function getInvoiceProducts(selectedInvoiceId, selectedBill, selectedDate) {
     var year = date.getFullYear();
     
     // set the formula to get the asked information
-    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, J, sum(I) where D="+selectedInvoiceId+ " and C='" + selectedBill + "' and month(E)=" + month + " and year(E)=" + year + " group by G,F,H,J\")");
+    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, J, L, sum(I) where D="+selectedInvoiceId+ " and C='" + selectedBill + "' and month(E)=" + month + " and year(E)=" + year + " group by G,F,H,J,L\")");
     
     // find the store inventory of each product
-    sheet.getRange(2,6,sheet.getLastRow()-1,1).setFormula("=IFERROR(INDEX(Output1!F:F;MATCH(A2;Output1!A:A;0);0))");
+    sheet.getRange(2,7,sheet.getLastRow()-1,1).setFormula("=IFERROR(INDEX(Output1!F:F;MATCH(A2;Output1!A:A;0);0))");
   
 	// create a 2 dim area of the data in the carrier names column and codes 
-	var products = sheet.getRange(2, 1, sheet.getLastRow()-1, 6).getValues().reduce( 
+	var products = sheet.getRange(2, 1, sheet.getLastRow()-1, 7).getValues().reduce( 
 		function(p, c) { 
 
           var status = c[3];
@@ -188,7 +188,9 @@ function resetNotSoldWaybillProduct(product, sheet, productIdColumn) {
         sheet.getCell(i+1,4).setValue("");
         sheet.getCell(i+1,5).setValue("");
         sheet.getCell(i+1,10).setValue("No Vendido");
-        sheet.getCell(i+1,12).setValue("");
+        sheet.getCell(i+1,14).setValue("");
+        sheet.getCell(i+1,15).setValue("");
+        sheet.getCell(i+1,16).setValue("");
       
       // If the billtype is a chargeback, we have to reset the product inventory for a while.
       if (product.billType == "chargeback") {

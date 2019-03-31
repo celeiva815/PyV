@@ -26,6 +26,8 @@
           <br>
           <input id="bill_id" type="number" title="Escriba un código">
           <br>
+          <h2>Total Factura: <span id="total_products">$0.00</span></h2>
+          <br>
           <div id="chargeback_reason">
             <label>Razón de la devolución:</label>
             <br>
@@ -40,33 +42,36 @@
         </div>
     </div>
     <div class="block"> 
-     <div class="two_columns">    
+     <div class="three_columns">    
          <h2>Inventario de la Tienda</h2>
          <input type="text" id="filter_table" onkeyup="filterTable()" class="filter_input" placeholder="Filtrar por nombre..." title="Escriba un nombre">
          <table id="products_table" class="table table-hover row-clickable">
            <thead>
              <tr>
                  <th>Id</th>
-                 <th width="40%">Artículo</th>
+                 <th width="30%">Artículo</th>
                  <th>Tamaño</th>
                  <th>En tienda</th>
+                 <th>Precio Max.</th>
              </tr> 
            </thead>
            <tbody>
           </tbody>
          </table>
          </div>
-         <div class="two_columns">
+         <div class="two_three_columns">
          <h2>Artículos a Vender/Devolver</h2>
          <input type="text" id="filter_second_table" onkeyup="filterSecondTable()" class="filter_input" placeholder="Filtrar por nombre..." title="Escriba un nombre">
          <table id="selected_products_table" class="table table-hover row-clickable">
          <thead>
              <tr>
                  <th>Id</th>
-                 <th width="40%">Artículo</th>
+                 <th width="30%">Artículo</th>
                  <th>Tamaño</th> 
                  <th>En tienda</th>
                  <th>Cantidad</th>
+                 <th>Precio</th>
+                 <th>Total</th>
              </tr>
              </thead>
              <tbody>

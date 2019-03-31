@@ -5,7 +5,83 @@
         
         $("#edit_waybill_button").click(processProducts);
         $("#spinner").hide();
+                // color a table row background
+        $("#products_table tbody tr").click(setBackground);
+        
+        // remove the .selected class from the row, detach it and append to the #selected_products_table. 
+        $("#products_table tbody tr").dblclick(appendToSelectedProducts);
     });
+    
+    
+       /**
+ * Remove a row from the products table to append it into the selected products table
+ */
+    function appendToSelectedProducts() {
+    
+       var products = $('#selected_products_table tbody tr').length;
+       
+       if (products > 0) {
+       
+        // disable the invoice id input
+        $("#waybill_id").prop("disabled", true );
+        //$("#invoice_id_submit").prop("disabled", true );
+    
+        // remove the background
+        $(this).removeClass('selected');
+        
+        // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
+        // set double click event to append the row to products.
+        // set click event to set/unset the background
+        var id = $(this).find("td:first").html();
+        
+        var exists = $("#ns_"+id).length > 0;
+        
+        if (!exists) {
+            
+         var tdStatus = "<td class='padding_left'>No Vendido</td>"
+         var tdAmount = "<td class='number_aligned'><input id='ns_q"+id+"' class='number_aligned' onchange='calculatePrice(this)' type='number'/></td>"
+         var tdPrice = "<td class='number_aligned'><input id='ns_p"+id+"' class='number_aligned' onchange='calculatePrice(this)' type='number' /></td>"
+         var tdTotal = "<td class='number_aligned'><input id='ns_t"+id+"' class='number_aligned products_price' type='number' disabled/></td>"
+         var tdInvoiceAmount = "<td style='display:none;'>0</td>"
+         var tdInvoicePrice = "<td style='display:none;'>0</td>"
+        
+        $(this).detach().clone().append(tdStatus + tdAmount + tdPrice + tdTotal + tdInvoiceAmount + tdInvoicePrice).appendTo('#selected_products_table')
+                 .addClass('change_product')
+                 .dblclick(appendToProducts)
+                 .click(setBackground);
+         
+        // increase the amount of selected products  
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())+1);
+        
+        } else {
+        
+        alert('El producto de ID ' + id + ' ya se encuentra como "No Vendido"');
+        
+        }
+      }
+    }
+   
+   /**
+ * Remove a row from the selected products table to append it into the products table
+ */
+    function appendToProducts() {
+    
+        // remove the last three input td
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
+        
+        // detach the row from the selected products table, remove the last td and append it to the #products table.
+        $(this).detach().clone().removeClass('change_product').appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        
+        // decrease the amount of selected products
+        $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
+        
+        calculateTotalPrice();
+    }  
     
  /** 
  * Creates a array with the table information and calls the google app script function to process the spreadsheet
@@ -13,12 +89,10 @@
     function searchProducts() {
  
         $("#spinner").show();
-        $('#products_table tbody').empty();
         $('#selected_products_table tbody').empty();
         
         searchWaybillProperties();
-        searchNotSoldProducts();
-        searchOtherStatusProducts();
+        searchInvoiceProducts();
     }
 
  /** 
@@ -37,35 +111,22 @@
  /** 
  * Creates a array with the table information and calls the google app script function to process the spreadsheet
  */
-    function searchNotSoldProducts() {
+    function searchInvoiceProducts() {
      
         // get the waybill id 
         var waybillId = $("#waybill_id").val();
         
         // run the server-side function to get the products.
-        google.script.run.withSuccessHandler(searchNotSoldProductsSuccessHandler).getNotSoldWaybillProducts(waybillId);     
-    }
-    
-    
-     /** 
- * Creates a array with the table information and calls the google app script function to process the spreadsheet
- */
-    function searchOtherStatusProducts() {
-     
-        // get the waybill id 
-        var waybillId = $("#waybill_id").val();
-        
-        // run the server-side function to get the products.
-        google.script.run.withSuccessHandler(searchOtherStatusProductsSuccessHandler).getOtherStatusWaybillProducts(waybillId);     
+        google.script.run.withSuccessHandler(searchInvoiceProductsSuccessHandler).getWaybillProducts(waybillId);     
     }
 
 /**
 * Receives the not sold products found when searching products.
 */
-  function searchNotSoldProductsSuccessHandler(products) {
+  function searchInvoiceProductsSuccessHandler(products) {
     
      var json = JSON.parse(products);
-     var tbody = $('#products_table tbody');
+     var tbody = $('#selected_products_table tbody');
      var date = "";
      var store = "";
      
@@ -78,48 +139,54 @@
          var productId = product[0];
          var productName = product[1];
          var productSize = product[2];
-         var productAmount = product[5];
+         var productStatus = product[3];
+         var productAmount = product[4];
+         var productPrice = product[5] ? product[5] : 0;
+         var productTotal = productPrice * productAmount;
          var productInventory = product[6];
          
-         var tdChange = "<td><input id='product_"+productId+"' class='change_product' type='number'/></td>"
+         var tdAmount = "";
+         var tdPrice = "";
+         var tdTotal = "";
+         var tdInvoiceAmount = "";
+         var tdInvoicePrice = "";        
+         var rowClass = "";
+         var disabled = "";
+         var id_type = "";
          
-         var tr = "<tr class='waybill_product'><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productAmount+"</td><td>"+productInventory+"</td>"+tdChange+"</tr>";
+         if (productStatus == 'No Vendido') {
          
+           rowClass = "searched_products change_product"
+           id_type = "ns_";
+           
+         
+         } else if (productStatus == 'Devuelto') {
+         
+           rowClass = "chargeback_searched_products";
+           disabled = "disabled";
+           id_type = "cb_";
+         
+         } else if (productStatus == 'Vendido') {
+         
+           rowClass = "sold_searched_products";
+           disabled = "disabled";
+           id_type = "ss_";
+       
+         }
+         
+           tdAmount = "<td class='number_aligned'><input class='number_aligned' id='"+id_type+"q"+productId+"' onchange='calculatePrice(this)' type='number'value='"+productAmount+"' "+disabled+"/></td>";
+           tdPrice = "<td class='number_aligned'><input class='number_aligned' id='"+id_type+"p"+productId+"' onchange='calculatePrice(this)' type='number' value='"+productPrice+"'"+disabled+"/></td>";
+           tdTotal = "<td class='number_aligned'><input class='number_aligned products_price' id='"+id_type+"t"+productId+"' type='number' value='"+productTotal+"' disabled/></td>";
+           tdInvoiceAmount = "<td style='display:none;'>"+productAmount+"</td>";
+           tdInvoicePrice = "<td style='display:none;'>"+productPrice+"</td>";
+         
+         var tr = "<tr class='"+ rowClass +"'><td id='"+id_type+productId+"' class='number_aligned'>"+productId+"</td><td>"+productName+"</td><td class='number_aligned'>"+productSize+"</td><td class='number_aligned'>"+productInventory+"</td><td class='padding_left'>"+productStatus+"</td>" + tdAmount + tdPrice + tdTotal + tdInvoiceAmount + tdInvoicePrice + "</tr>";
          tbody.append(tr);
          
       });
       
       $("#spinner").hide();
-  };
-
-/**
-* Receives the non-not sold products found when searching products.
-*/
-  function searchOtherStatusProductsSuccessHandler(products) {
-    
-     var json = JSON.parse(products);
-     var tbody = $('#selected_products_table tbody');
-     
-     // clear the previous content
-     $(tbody).empty();
-     
-     // add each item to the tbody
-     $.each(json, function(i, product) {
-         
-         var productId = product[0];
-         var productName = product[1];
-         var productSize = product[2];
-         var productStatus = product[3];
-         var productAmount = product[5];
-         var productInventory = product[8];
-         
-         var tr = "<tr><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productAmount+"</td><td>"+productInventory+"</td><td>"+productStatus+"</td></tr>";
-         
-         tbody.append(tr);
-         
-      });
-      
-      $("#spinner").hide();
+      calculateTotalPrice();
   };
   
   
@@ -164,7 +231,7 @@
  
         // Iterate each .waybill_product tr 
         var waybill = [];
-        $(".waybill_product").each(function(index) {
+        $(".change_product").each(function(index) {
 
          noProducts = false;
 
@@ -172,45 +239,67 @@
          var id = $(this).find("td")[0].innerHTML;
          var name = $(this).find("td")[1].innerHTML;
          var size = $(this).find("td")[2].innerHTML;
-         var waybillStock = $(this).find("td")[3].innerHTML;
-         var inventory = $(this).find("td")[4].innerHTML;
-         var amount = $(this).find("td:last input").val();
+         var inventory = $(this).find("td")[3].innerHTML;
+         var status = $(this).find("td")[4].innerHTML;
+         var waybillAmount = $(this).find("td")[8].innerHTML;
+         var amount = $(this).find("td input")[0].value;
+         var price = $(this).find("td input")[1].value;
+         var total = $(this).find("td input")[2].value;
 
           inventory = parseInt(inventory);
           amount = parseInt(amount);
-          waybillStock = parseInt(waybillStock);
+          price = parseInt(price);
+          total = amount * price;
+          
+          var difference = amount - waybillAmount;
          
-         //validate the amount greater than zero to change only the products edited.
-         if (amount > 0) {
-                
-           var difference = amount - waybillStock;
+         // validate the amount less or equal to the inventory
+           if (amount <= 0) {
+         
+              $("#edit_waybill_button").removeAttr('disabled');
+              alert("La cantidad ingresada de " + name + " " + size + " no puede ser menor o igual a cero.");
+              areProductsValidated = false;
+              return false;
+           }
+           
+           // validate the amount less or equal to the inventory
+           if (price <= 0) {
+         
+              $("#edit_waybill_button").removeAttr('disabled');
+              alert("El precio ingresado de " + name + " " + size + " no puede ser menor o igual a cero.");
+              areProductsValidated = false;
+              return false;
+           }
          
            // validate the amount less or equal to the inventory
            if (difference > inventory) {
-              
+         
               $("#edit_waybill_button").removeAttr('disabled');
               alert("La cantidad ingresada de " + name + " " + size + " no puede ser mayor al inventario.");
               areProductsValidated = false;
               return false;
            }
+
          
            var product = {};
          
            // set the product object
            product.waybillNumber = waybillNumber;
            product.waybillDate = waybillDate;
+           product.waybillAmount = waybillAmount;
            product.store = store;
            product.id = id;
            product.name = name;
            product.size = size;
+           product.status = status;
            product.amount = amount;
-           product.waybillStock = waybillStock;
+           product.price = price;
+           product.total = total;
+           product.inventory = inventory;
          
            // add the object to array
            waybill[modifyProducts] = product;
-           modifyProducts++;           
-         
-         }
+           modifyProducts++;          
             
         });
         
@@ -285,6 +374,51 @@
     $("#spinner").hide();
     
   };
+  
+   
+    function calculatePrice(e) {
+   
+      // get the id
+      var id = e.id;
+      var productId = id.substring(4, id.length);
+      var type = id.substring(0,2);
+      
+      // get the variables
+      var quantity = $("#"+type+"_q"+productId).val();
+      var price = $("#"+type+"_p"+productId).val();
+      
+      //parse the text
+      quantity = parseFloat(quantity);
+      price = parseFloat(price);
+      
+      var productTotal = quantity * price;
+      
+      $("#"+type+"_t"+productId).val(productTotal);
+
+      calculateTotalPrice();
+      
+   }
+
+   function calculateTotalPrice() {
+   
+      var totalProducts = 0;
+       
+      $(".products_price").each(function(index) {
+        
+        var value = $(this).val();
+        
+        if (!value) {
+          value = 0;
+        }
+        
+        totalProducts += parseFloat(value);
+        
+      });
+      
+      var totalInvoice = numberWithCommas(parseFloat(totalProducts).toFixed(0));
+      
+      $("#total_products").text("$"+totalInvoice);
+   }
 
 
 </script>

@@ -5,11 +5,11 @@
 <div class="content"> 
     <div class ="block">
     
-       <div class="two_columns">
+       <div class="three_columns">
         <label for="code">Última gúia creada: <?!=getLastWaybillCreated()?></label>
         <br>
         <label for="code">Número de guía de Despacho:</label>
-        <input id="waybill_number" type="number" value="<?!=parseInt(getLastWaybillCreated()) + 1?>" disabled/>
+        <input id="waybill_number" type="number" onchange="javascript:searchWaybillProperties()" value="<?!=parseInt(getLastWaybillCreated()) + 1?>"/>
         <br>
         <label for="code">Fecha:</label>
         <input id="waybill_date" class="current_date" type="date"/>
@@ -20,7 +20,10 @@
                      { return "<option value='"+d[1]+"'>"+d[1]+"</option>"; }).join('\n');?> 
             </select> 
             </div>
-            <div class="two_columns">
+            <div class="three_columns">
+               <h2>Total Guía: <span id="total_products">$0.00</span></h2>
+            </div>
+            <div class="three_columns">
                
                <h2>Artículos por Despachar: <span id="selected_products_count">0</span></h2>
                <button id="add_waybills_button" class="process_button" type="button" onclick="this.disabled=true;">Ingresar Guía</button>
@@ -28,7 +31,7 @@
             </div>
     </div>
     <div class="block"> 
-         <div class="two_columns">
+         <div class="three_columns">
           <h2>Productos Vigentes</h2>
          <input type="text" id="filter_table" class="filter_input" onkeyup="filterTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
          <table id="products_table" class="table table-hover row-clickable">
@@ -46,7 +49,7 @@
           </tbody>
          </table>
          </div>
-         <div class="two_columns">
+         <div class="two_three_columns">
          <h2>Productos Seleccionados</h2>
          <input type="text" id="filter_second_table" class="filter_input" onkeyup="filterSecondTable()" placeholder="Filtrar por nombre..." title="Escriba un nombre">
          <table id="selected_products_table" class="table table-hover row-clickable">
@@ -57,6 +60,8 @@
                  <th>Tamaño</th> 
                  <th>Inventario</th>
                  <th>Cantidad</th>
+                 <th>Precio</th>
+                 <th>Total</th>
              </tr>
              </thead>
          </table>

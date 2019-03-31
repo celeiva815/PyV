@@ -18,6 +18,8 @@
             }
         });
         
+        $("#store").focusout(getContactInfo);
+        
         $("#edit_receipt_or_invoice_button").click(processProducts);
         $("#spinner").hide();
         
@@ -44,12 +46,13 @@
         // set click event to set/unset the background
         var id = $(this).find("td:first").html();
         
-         var tdAmount = "<td><input id='q_"+id+"' type='number'/></td>"
-         var tdPrice = "<td><input id='p_"+id+"' type='number' /></td>"
+         var tdAmount = "<td><input id='q"+id+"' onchange='calculatePrice(this)' type='number'/></td>"
+         var tdPrice = "<td><input id='p"+id+"'onchange='calculatePrice(this)' type='number' /></td>"
+         var tdTotal = "<td><input id='t"+id+"' class='products_price' type='number' disabled/></td>"
          var tdInvoiceAmount = "<td style='display:none;'>0</td>"
          var tdInvoicePrice = "<td style='display:none;'>0</td>"
         
-        $(this).detach().clone().append(tdAmount + tdPrice + tdInvoiceAmount + tdInvoicePrice).appendTo('#selected_products_table')
+        $(this).detach().clone().append(tdAmount + tdPrice + tdTotal + tdInvoiceAmount + tdInvoicePrice).appendTo('#selected_products_table')
                  .addClass('change_product')
                  .dblclick(appendToProducts)
                  .click(setBackground);
@@ -70,15 +73,59 @@
         $(this).find("td:last").remove();
         $(this).find("td:last").remove();
         $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
         
         // detach the row from the selected products table, remove the last td and append it to the #products table.
-        $(this).detach().clone().appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        $(this).detach().clone().removeClass('change_product').appendTo('#products_table').dblclick(appendToSelectedProducts);    
         
         // decrease the amount of selected products
         $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
         
-        calculateTotalCosts();
+        calculateTotalPrice();
     }  
+    
+     function getContactInfo() {
+    
+     var store = $("#store").val();
+     
+     if (!store) {
+       return;
+     }
+     
+     $("#spinner").show();
+          
+           google.script.run
+           .withSuccessHandler(getContactInfoSuccessHandler)
+           .getContactInfo(store);
+       
+    }
+    
+    function getContactInfoSuccessHandler(response) {
+    
+    $("#spinner").hide();
+    
+    
+    var json = JSON.parse(response); 
+    var email = json[0];
+    var phone = json[1];
+   
+   if(!email) {
+    $("#email").attr("placeholder", "Ingrese un correo");
+    $("#email").val("");
+   } else {
+    $("#email").val(email);
+    $("#email").attr("placeholder", "");
+   }
+   
+   if(!phone) {
+    $("#phone").attr("placeholder", "Ingrese un teléfono");
+    $("#phone").val("");
+   } else {
+    $("#phone").val(phone);
+    $("#phone").attr("placeholder", "");
+   }
+   
+  }
     
 
  /** 
@@ -93,6 +140,9 @@
  * Creates a array with the table information and calls the google app script function to process the spreadsheet
  */
     function searchDonatedProducts() {
+    
+        $("#spinner").show();
+        $("#invoice_id_submit").prop("disabled", true );
      
         // get the invoice id 
         var invoiceId = $("#invoice_id").val();
@@ -129,21 +179,25 @@
          date = product[5];
          var productPrice = product[6];
          var productAmount = product[7];
-         var productInventory = product[8];
+         var productTotal = productPrice * productAmount;
+         var productInventory = product[9]; //always has to be the last one
          
-         var tdAmount = "<td><input id='c_"+productId+"' type='number'value='"+productAmount+"'/></td>"
-         var tdPrice = "<td><input id='p_"+productId+"' type='number' value='"+productPrice+"'/></td>"
+         
+         var tdAmount = "<td><input id='q"+productId+"' onchange='calculatePrice(this)' type='number'value='"+productAmount+"'/></td>"
+         var tdPrice = "<td><input id='p"+productId+"' onchange='calculatePrice(this)' type='number' value='"+productPrice+"'/></td>"
+         var tdTotal = "<td><input id='t"+productId+"' class='products_price' type='number' value='"+productTotal+"' disabled/></td>"
          var tdInvoiceAmount = "<td style='display:none;'>"+productAmount+"</td>"
          var tdInvoicePrice = "<td style='display:none;'>"+productPrice+"</td>"
          
-         var tr = "<tr class='change_product'><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td>" + tdAmount + tdPrice + tdInvoiceAmount + tdInvoicePrice + "</tr>";
+         var tr = "<tr class='change_product searched_products'><td>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td>" + tdAmount + tdPrice + tdTotal + tdInvoiceAmount + tdInvoicePrice + "</tr>";
          
          tbody.append(tr);
          
       });
       
+      console.log(recipientName);
       // set the recipient
-      $("#recipients").val(recipientName);
+      $("#store").val(recipientName);
       
       var newDate = new Date(Date.parse(date));
       newDate.setHours(24);
@@ -167,8 +221,16 @@
         
         // remove the .selected class from the row, detach it and append to the #selected_products_table. 
         $("#products_table tbody tr").dblclick(appendToSelectedProducts);
+        
+        $("#spinner").hide();
+        $("#invoice_id_submit").prop("disabled", false );
+        
+        calculateTotalPrice();
+        
+        getContactInfo();
+        
       
-  };
+  }
   
   
   /** 
@@ -186,7 +248,9 @@
        // get the values
        var billDate = $("#invoice_date").val();
        var billId = $("#invoice_id").val();
-       var store = $("#recipients").val();
+       var store = $("#store").val();
+       var email = $("#email").val();
+       var phone = $("#phone").val();
        var billType = $('input[name=bill]:checked').val();
        
         // Iterate each .waybill_product tr 
@@ -200,14 +264,16 @@
          var name = $(this).find("td")[1].innerHTML;
          var size = $(this).find("td")[2].innerHTML;
          var inventory = $(this).find("td")[3].innerHTML;
-         var invoiceStock = $(this).find("td")[6].innerHTML;
-         var invoicePrice = $(this).find("td")[7].innerHTML;
+         var invoiceStock = $(this).find("td")[7].innerHTML;
+         var invoicePrice = $(this).find("td")[8].innerHTML;
          var amount = $(this).find("td input")[0].value;
          var price = $(this).find("td input")[1].value;
+         var total = $(this).find("td input")[2].value;
 
           inventory = parseInt(inventory);
           amount = parseInt(amount);
           price = parseFloat(price);
+          total = parseFloat(total);
           invoiceStock = parseInt(invoiceStock);
           invoicePrice = parseFloat(invoicePrice);
          
@@ -246,11 +312,14 @@
            product.billDate = billDate;
            product.billId = billId;
            product.store = store;
+           product.email = email;
+           product.phone = phone;
            product.id = id;
            product.name = name;
            product.size = size;
            product.amount = amount;
            product.price = price;
+           product.total = total;
            product.inventory = inventory;
            product.invoiceStock = invoiceStock;
            product.invoicePrice = invoicePrice;
@@ -289,7 +358,7 @@
       // get the values
        var invoiceNumber = $("#invoice_id").val();
        var invoiceDate = $("#invoice_date").val();
-       var store = $("#recipients").val();
+       var store = $("#store").val();
        var billType = $('input[name=bill]:checked').val();
  
       // validate non-empty and greater than zero waybill number.
@@ -325,6 +394,49 @@
       return true;
     
     }
+    
+    function calculatePrice(e) {
+   
+      // get the id
+      var id = e.id;
+      var productId = id.substring(1, id.length);
+      
+      // get the variables
+      var quantity = $("#q"+productId).val();
+      var price = $("#p"+productId).val();
+      
+      //parse the text
+      quantity = parseFloat(quantity);
+      price = parseFloat(price);
+      
+      var productTotal = quantity * price;
+      
+      $("#t"+productId).val(productTotal);
+
+      calculateTotalPrice();
+      
+   }
+
+   function calculateTotalPrice() {
+   
+      var totalProducts = 0;
+       
+      $(".products_price").each(function(index) {
+        
+        var value = $(this).val();
+        
+        if (!value) {
+          value = 0;
+        }
+        
+        totalProducts += parseFloat(value);
+        
+      });
+      
+      var totalInvoice = numberWithCommas(parseFloat(totalProducts).toFixed(0));
+      
+      $("#total_products").text("$"+totalInvoice);
+   }
     
     
   function editSaleOrDonationProductsSuccessHandler(response) {

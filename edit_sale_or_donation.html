@@ -20,15 +20,22 @@
           </form>
         </div>
         <div class="three_columns">
+        <label for="code">Fecha:</label>
+          <input id="invoice_date" class="current_date" type="date"/>
+           <br>
         <label for="code">Vendido/Donado a:</label>
-          <select id="recipients">
+        <input id="store" type="text" list="recipients" />
+          <datalist id="recipients">
                  <?!=getActiveRecipients().map(function(d) 
                      { return "<option value='"+d[1]+"'>"+d[1]+"</option>"; }).join('\n');?> 
-          </select>
+          </datalist>
           <br>
-          <label for="code">Fecha:</label>
-          <input id="invoice_date" class="current_date" type="date"/>
+          <label for="email">Mail:</label>
+          <input id="email" type="email" autocomplete="off"/>
           <br>
+          <label for="mail">Teléfono:</label>
+          <input id="phone" type="text" autocomplete="off"/>          
+          <h2 class="after_form">Total Guía: <span id="total_products">$0.00</span></h2>
         </div>
         <div class="three_columns">
           <button id="edit_receipt_or_invoice_button" class="process_button" type="button" onclick="this.disabled=true;">Editar</button>
@@ -66,6 +73,7 @@
                  <th>Inventario</th>
                  <th>Cantidad</th>
                  <th>Precio</th>
+                 <th>Total</th>
              </tr>
              </thead>
              <tbody>

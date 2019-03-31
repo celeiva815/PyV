@@ -60,6 +60,47 @@ function removeWaybillProduct(waybill) {
  
   
 }
+
+/**
+* Gets the not sold products of an invoice, based on its id.
+*/
+function getNotSoldWaybillProducts(waybillId) {
+  
+   // get the output1 sheet
+	var sheet = getOutputSheet(1)
+    
+    // get the first cell of the Output1 sheet
+    var cell = getOutputFirstCell(1);
+  
+     // set the formula to get the asked information
+    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, J, L, sum(I) where J='No Vendido' and A="+waybillId+" group by G, F, H, J, L\")");
+  
+     // find the inventory of each product
+    sheet.getRange(2,7,sheet.getLastRow()-1,1).setFormula("=IFERROR(INDEX(Productos!K:K;MATCH(A2;Productos!A:A;0);0))");
+    
+	// create a 2 dim area of the data in the carrier names column and codes 
+	var products = sheet.getRange(2, 1, sheet.getLastRow()-1, 7).getValues();
+  
+  if (products.length > 0) {
+   
+    products.reduce( 
+		function(p, c) { 
+          
+          // if the inventory is greater than zero, add it to the list
+          var inventory = c[5];
+          
+          if (inventory > 0) {
+            
+			p.push(c); 
+          }
+			return p; 
+		}, []); 
+  }
+ 
+  
+    return JSON.stringify(products);
+}
+
  
   
    

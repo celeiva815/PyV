@@ -25,7 +25,7 @@ function addWaybill(waybill) {
   var productSheet = MemsheetApp.getSheet("Productos");
   var productIdColumn = productSheet.getColumn(1);
   
-  if (waybill.length > 0) {
+  /*if (waybill.length > 0) {
    
     var waybillId = waybill[0].waybillNumber;
     
@@ -33,7 +33,7 @@ function addWaybill(waybill) {
        return -1;  
     }
     
-  }
+  }*/
   
   var values = []
   
@@ -42,7 +42,7 @@ function addWaybill(waybill) {
   for (var i=0; i<waybill.length; i++) {
    
     var product = waybill[i];
-    var row = new Array(product.waybillNumber, product.waybillDate, "", "", "", product.id, product.name, product.size, product.amount, "No Vendido", product.store);
+    var row = new Array(product.waybillNumber, product.waybillDate, "", "", "", product.id, product.name, product.size, product.amount, "No Vendido", product.store, product.price, product.total);
     
     values[i] = row;
     
@@ -53,7 +53,7 @@ function addWaybill(waybill) {
   
     //Add all the new rows
     console.time("write invoice");
-    sheet.getRange(lastRow + 1,1,waybill.length,11).setValues(values);
+    sheet.getRange(lastRow + 1,1,waybill.length,13).setValues(values);
     console.timeEnd("write invoice");
     console.time("write inventory");
     productSheet = MemsheetApp.getSheet("Productos");

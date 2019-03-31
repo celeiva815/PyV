@@ -3,7 +3,7 @@
 */
 function openInvoiceWaybillDialog() {
   var html = HtmlService.createTemplateFromFile('invoice_waybill')
-  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1500)
+  .evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME).setHeight(1000).setWidth(1600)
   .setTitle('Dialog');
   SpreadsheetApp.getUi().showModalDialog(html, 'Nueva Boleta, Factura o Guía de Devolución');
 }
@@ -18,10 +18,10 @@ function getProductsStore(selectedStoreName) {
   
     var cell = getOutputFirstCell(1);
   
-    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, K, sum(I) where J='No Vendido' and K='"+selectedStoreName+"' group by G, F, H, K\")");
+    cell.setFormula("=QUERY('Base de Datos'!A:M;\"select F, G, H, K, sum(I), max(L) where J='No Vendido' and K='"+selectedStoreName+"' group by G, F, H, K\")");
   
 	// create a 2 dim area of the data in the carrier names column and codes 
-	var products = sheet.getRange(2, 1, sheet.getLastRow() -1, 5).getValues().reduce( 
+	var products = sheet.getRange(2, 1, sheet.getLastRow() -1, 6).getValues().reduce( 
 		function(p, c) { 
           
           // add the product to the list
@@ -68,6 +68,8 @@ function invoiceWaybill(bill) {
 function changeStoreProductInventory(product, sheet, productIdColumn, cloneRows) {
   
   var amount = parseInt(product.amount);
+  var price = parseInt(product.price);
+  var total = parseInt(product.total);
   var store = product.store;
   var waybillIds = [];
   var j = 0;
@@ -108,6 +110,8 @@ function changeStoreProductInventory(product, sheet, productIdColumn, cloneRows)
         
         //set the invoiced products in the actual row with the new amount
         sheet.getCell(i+1,9).setValue(amount);
+        sheet.getCell(i+1,12).setValue(price);
+        sheet.getCell(i+1,13).setValue(total);
         setInvoiceWaybillProduct(sheet, product, i+1);
         
         // if it's a chargeback, increase the inventory        
@@ -123,6 +127,10 @@ function changeStoreProductInventory(product, sheet, productIdColumn, cloneRows)
          
         //set the sold products
         setInvoiceWaybillProduct(sheet, product, i+1);
+        
+        //set the new price
+        sheet.getCell(i+1,12).setValue(price);
+        sheet.getCell(i+1,13).setValue(total);
         
         // if it's a chargeback, increase the inventory        
         if (product.billType == "chargeback") {
@@ -168,7 +176,7 @@ function changeStoreProductInventory(product, sheet, productIdColumn, cloneRows)
       
       if (product.billType == "chargeback") {
        
-        sheet.getCell(row,12).setValue(product.chargeback);
+        sheet.getCell(row,14).setValue(product.chargeback);
       }
       
       

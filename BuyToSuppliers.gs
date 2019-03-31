@@ -8,6 +8,33 @@ function openBuyToSuppliersDialog() {
   SpreadsheetApp.getUi().showModalDialog(html, 'Comprar a Proveedores');
 }
 
+/** 
+* Gets the products names */ 
+function getSupplierProducts(supplier) { 
+  
+	// get the data in the active sheet 
+	var sheet = SpreadsheetApp.getActive().getSheetByName('Productos'); 
+	// create a 2 dim area of the data in the carrier names column and codes 
+	var products = sheet.getRange(2, 1, sheet.getLastRow(), 11).getValues().reduce( 
+		function(p, c) { 
+          
+          // get if the product is active or not
+          var active = c[9];
+          var shop = c[6];
+          
+           console.log("shop", shop);
+          
+          if (active == 1 && shop == supplier) {
+            
+			p.push(c); 
+          }
+			return p; 
+		}, []); 
+  
+  return JSON.stringify(products);
+}
+
+
 /**
 * Gets the number or ID of the last supplier invoice created. */
 function getLastInvoiceCreated() {

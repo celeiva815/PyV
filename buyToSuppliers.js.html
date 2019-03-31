@@ -2,6 +2,12 @@
 	
     $(document).ready(function() {
     
+        // set the change event to the store selection
+        $( "#stores").change(selectStore);
+        
+        // select the first store
+        selectStore();
+    
         // color a table row background
         $("#products_table tbody tr").click(setBackground);
         
@@ -58,6 +64,55 @@
         
         calculateTotalCosts();
     }
+    
+    function selectStore() {
+     
+        // get the store selected 
+        var storeName = $("#stores").find(":selected").text();
+        $("#spinner").show();
+        console.log(storeName);
+        
+        // run the server-side function to get the products.
+        google.script.run.withSuccessHandler(selectStoreSuccessHandler).getSupplierProducts(storeName);     
+    }
+    
+    /**
+* Receives the products found when searching products.
+*/
+  function selectStoreSuccessHandler(products) {
+    
+     var json = JSON.parse(products);
+     var tbody = $('#products_table tbody');
+     
+     
+     // clear the previous content
+     $(tbody).empty();
+     
+     // add each item to the tbody
+     $.each(json, function(i, product) {
+         
+         var productId = product[0];
+         var productName = product[2];
+         var productSize = product[3];
+         var productInventory = product[10]; 
+         
+         console.log(productId);
+         var tr = "<tr><td class='product_ids'>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td></tr>";
+         
+         tbody.append(tr);
+         
+      });
+      
+        // color a table row background
+        $("#products_table tbody tr").click(setBackground);
+        
+        // remove the .selected class from the row, detach it and append to the #selected_products_table. 
+        $("#products_table tbody tr").dblclick(appendToSelectedProducts);
+        
+        $("#spinner").hide();
+      
+  }
+
 
  /** 
  * Creates a array with the table information and calls the google app script function to process the spreadsheet
@@ -221,8 +276,8 @@
       var productTotal = quantity * cost;
       var productTotalShipping = shipping * productTotal / 100;
       
-      $("#t"+productId).val(productTotal);
-      $("#s"+productId).val(productTotalShipping);
+      $("#t"+productId).val(productTotal.toFixed(0));
+      $("#s"+productId).val(productTotalShipping.toFixed(0));
       
       calculateTotalCosts();
 
@@ -257,11 +312,11 @@
          totalShipping += parseFloat(value);
       });
       
-      var totalInvoice = parseFloat(totalProducts + totalShipping);
+      var totalInvoice = numberWithCommas(parseFloat(totalProducts + totalShipping).toFixed(0));
       
-      $("#total_products").text("$"+totalProducts.toFixed(2));
-      $("#total_shipping").text("$"+totalShipping.toFixed(2));
-      $("#total_invoice").text("$"+totalInvoice.toFixed(2));
+      $("#total_products").text("$"+numberWithCommas(totalProducts.toFixed(0)));
+      $("#total_shipping").text("$"+numberWithCommas(totalShipping.toFixed(0)));
+      $("#total_invoice").text("$"+totalInvoice);
    
    }
 

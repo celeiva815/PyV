@@ -35,11 +35,14 @@
         // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
         // set double click event to append the row to products.
         // set click event to set/unset the background        
+        var productId = $(this).find("td:first").html();
+ 
+        var tdAmount = "<td><input id='q"+productId+"' onchange='calculatePrice(this)'  type='number'/></td>"
+        var tdPrice = '<td><input id="p'+productId+'" onchange="calculatePrice(this)" type="number"/></td>'
+        var tdTotal = '</td><td><input id="t'+productId+'" class="products_price" type="number" disabled/></td>'
+        var tdInvoiceAmount = "<td style='display:none;'></td>"
         
-        var tdAmount = "<td><input type='number'/></td>";
-        var tdInvoiceAmount = "<td style='display:none;'>0</td>";
-        
-        $(this).detach().clone().append(tdAmount + tdInvoiceAmount).appendTo('#selected_products_table')
+        $(this).detach().clone().append(tdAmount + tdPrice + tdTotal + tdInvoiceAmount).appendTo('#selected_products_table')
                  .addClass('change_product')
                  .dblclick(appendToProducts)
                  .click(setBackground);
@@ -58,7 +61,7 @@
         $(this).find("td:last").remove();
         
         // detach the row from the selected products table, remove the last td and append it to the #products table.
-        $(this).detach().clone().appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        $(this).detach().clone().removeClass('change_product').appendTo('#products_table').dblclick(appendToSelectedProducts);    
         
         // decrease the amount of selected products
         $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
@@ -164,17 +167,22 @@
          var productId = product[0];
          var productName = product[1];
          var productSize = product[2];
-         var productAmount = product[4];
-         var productStoreInventory = product[5];
+         var productPrice = product[4];
+         var productAmount = product[5];
+         var productStoreInventory = product[6];
+         var productTotal = parseInt(productAmount) * parseInt(productPrice);
          
          if (!productStoreInventory) {
             productStoreInventory = 0;
          }
          
-         var tdAmount = "<td><input id='p"+productId+"' class='change_product' type='number' value='"+ productAmount +"'/></td>"
+         
+         var tdAmount = "<td><input id='q"+productId+"' onchange='calculatePrice(this)'  type='number' value='"+ productAmount +"'/></td>"
+         var tdPrice = '<td><input id="p'+productId+'" onchange="calculatePrice(this)" type="number" value="'+ productPrice +'"/></td>'
+         var tdTotal = '</td><td><input id="t'+productId+'" class="products_price" type="number" value="'+ productTotal +'" disabled/></td>'
          var tdInvoiceAmount = "<td style='display:none;'>"+productAmount+"</td>"
          
-         var tr = "<tr class='change_product'><td>" + productId + "</td><td>" + productName + "</td><td>" + productSize + "</td><td>" + productStoreInventory + "</td>" + tdAmount + tdInvoiceAmount + "</tr>";
+         var tr = "<tr class='change_product searched_products'><td>" + productId + "</td><td>" + productName + "</td><td>" + productSize + "</td><td>" + productStoreInventory + "</td>" + tdAmount + tdPrice + tdTotal +  tdInvoiceAmount + "</tr>";
          
          tbody.append(tr);
          
@@ -183,6 +191,8 @@
       });
       
        $("#spinner").hide();
+       
+       calculateTotalPrice();
 
   };
   
@@ -271,13 +281,36 @@
          var size = $(this).find("td")[2].innerHTML;
          var inventory = $(this).find("td")[3].innerHTML;
          var amount = $(this).find("td input")[0].value;
+         var price = $(this).find("td input")[1].value;
+         var total = $(this).find("td input")[2].value;
          var invoiceStock = $(this).find("td")[5].innerHTML;
 
           inventory = parseInt(inventory);
           amount = parseInt(amount);
+          price = parseInt(price);
+          total = parseInt(total);
           invoiceStock = parseInt(invoiceStock);
          
            var difference = amount - invoiceStock;
+         
+         //validate the amount greater than zero
+         if (!amount || amount <= 0) {
+         
+            $("#edit_receipt_or_invoice_button").removeAttr('disabled');
+            alert("La cantidad ingresada de " + name + " " + size + " debe ser mayor a 0.");
+            areProductsValidated = false;
+            return false;
+         }
+         
+         //validate the amount greater than zero
+         if (!price || price <= 0) {
+         
+            $("#edit_receipt_or_invoice_button").removeAttr('disabled');
+            alert("El precio ingresado de " + name + " " + size + " debe ser mayor a 0.");
+            areProductsValidated = false;
+            return false;
+         }
+         
          
            // validate the amount less or equal to the inventory
            if (difference > inventory) {
@@ -298,6 +331,8 @@
            product.name = name;
            product.size = size;
            product.amount = amount;
+           product.price = price;
+           product.total = total;
            product.inventory = inventory;
            product.storeInvoiceStock = invoiceStock;
            product.billType = billType;
@@ -374,6 +409,48 @@
       return true;
     
     }
+    
+     function calculatePrice(e) {
+   
+      // get the id
+      var id = e.id;
+      var productId = id.substring(1, id.length);
+      
+      // get the variables
+      var quantity = $("#q"+productId).val();
+      var price = $("#p"+productId).val();
+      
+      //parse the text
+      quantity = parseFloat(quantity);
+      price = parseFloat(price);
+      
+      var productTotal = quantity * price;
+      
+      $("#t"+productId).val(productTotal);
+
+      calculateTotalPrice();
+   }
+   
+   function calculateTotalPrice() {
+   
+      var totalProducts = 0;
+       
+      $(".products_price").each(function(index) {
+        
+        var value = $(this).val();
+        
+        if (!value) {
+          value = 0;
+        }
+        
+        totalProducts += parseFloat(value);
+        
+      });
+      
+      var totalInvoice = numberWithCommas(parseFloat(totalProducts).toFixed(0));
+      
+      $("#total_products").text("$"+totalInvoice);
+   }
     
     
   function editReceiptOrInvoiceSuccessHandler(response) {

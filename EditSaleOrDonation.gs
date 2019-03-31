@@ -21,13 +21,13 @@ function getDonatedProducts(selectedInvoiceId) {
     var cell = getOutputFirstCell(1) 
     
     // set the formula to get the asked information
-    cell.setFormula("=QUERY('BD Ventas y donaciones desde BG'!A:M;\"select D, E, F, I, B, A, J, sum(G) where C=" + selectedInvoiceId + " group by D, F, E, I, B, A, J\")");
+    cell.setFormula("=QUERY('BD Ventas y donaciones desde BG'!A:M;\"select D, E, F, I, B, A, J, sum(G), K where C=" + selectedInvoiceId + " group by D, F, E, I, B, A, J, K\")");
     
     // find the inventory of each product
-    sheet.getRange(2,9,sheet.getLastRow(),1).setFormula("=IFERROR(INDEX(Productos!K:K;MATCH(A2;Productos!A:A;0);0))");
+    sheet.getRange(2,10,sheet.getLastRow(),1).setFormula("=IFERROR(INDEX(Productos!K:K;MATCH(A2;Productos!A:A;0);0))");
   
 	// create a 2 dim area of the data in the carrier names column and codes 
-	var products = sheet.getRange(2, 1, sheet.getLastRow(), 9).getValues().reduce( 
+	var products = sheet.getRange(2, 1, sheet.getLastRow(), 10).getValues().reduce( 
 		function(p, c) { 
 
            // if the inventory is greater than zero, add it to the list
@@ -84,6 +84,7 @@ function editSaleOrDonation(invoice) {
     sheet.getCell(row,8).setValue(billStatus);
     sheet.getCell(row,9).setValue(product.store);
     sheet.getCell(row,10).setValue(product.price);
+    sheet.getCell(row,11).setValue(product.total);
     
     // decrease stock of the product
     decreaseProductStock(product.id, difference, productIdColumn);
@@ -91,6 +92,7 @@ function editSaleOrDonation(invoice) {
   
   MemsheetApp.flush();
   
+  saveRecipient(product.store, product.email, product.phone);
 }
 
 function findSaleOrDonationProductCellRow(waybillId, productId) {

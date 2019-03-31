@@ -13,6 +13,8 @@
         // set the invoice date as today date.
         document.getElementById("invoice_date").valueAsDate = new Date();
         
+        $("#store").focusout(getContactInfo);
+        
         $("#spinner").hide();
     });
     
@@ -23,11 +25,12 @@
     
         // remove the background
         $(this).removeClass('selected');
+        var id = $(this).find("td:first").html();
         
         // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
         // set double click event to append the row to products.
         // set click event to set/unset the background
-        $(this).detach().clone().append('<td><input type="number"/></td><td><input type="number"/></td>').appendTo('#selected_products_table')
+        $(this).detach().clone().append('<td><input id="q'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="p'+id+'" onchange="calculatePrice(this)" type="number"/></td><td><input id="t'+id+'" class="products_price" type="number" disabled/></td>').appendTo('#selected_products_table')
                  .addClass('waybill_product')
                  .dblclick(appendToProducts)
                  .click(setBackground);
@@ -44,13 +47,58 @@
         // remove the input td
         $(this).find("td:last").remove();
         $(this).find("td:last").remove();
+        $(this).find("td:last").remove();
         
         // detach the row from the selected products table, remove the last td and append it to the #products table.
-        $(this).detach().clone().appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        $(this).detach().clone().removeClass('waybill_product').appendTo('#products_table').dblclick(appendToSelectedProducts);    
         
         // decrease the amount of selected products
         $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
     }
+    
+    
+    function getContactInfo() {
+    
+     var store = $("#store").val();
+     
+     if (!store) {
+       return;
+     }
+     
+     $("#spinner").show();
+          
+           google.script.run
+           .withSuccessHandler(getContactInfoSuccessHandler)
+           .getContactInfo(store);
+       
+    }
+    
+    function getContactInfoSuccessHandler(response) {
+    
+    $("#spinner").hide();
+    
+    
+    var json = JSON.parse(response); 
+    var email = json[0];
+    var phone = json[1];
+   
+   if(!email) {
+    $("#email").attr("placeholder", "Ingrese un correo");
+    $("#email").val("");
+   } else {
+    $("#email").val(email);
+    $("#email").attr("placeholder", "");
+   }
+   
+   if(!phone) {
+    $("#phone").attr("placeholder", "Ingrese un teléfono");
+    $("#phone").val("");
+   } else {
+    $("#phone").val(phone);
+    $("#phone").attr("placeholder", "");
+   }
+   
+  }
 
  /** 
  * Creates a array with the table information and calls the google app script function to process the spreadsheet
@@ -67,6 +115,8 @@
        var billDate = $("#invoice_date").val();
        var billId = $("#waybill_number").val();
        var store = $("#store").val();
+       var email = $("#email").val();
+       var phone = $("#phone").val();
        var billType = $('input[name=bill]:checked').val();
        
         // Iterate each .waybill_product tr 
@@ -83,10 +133,12 @@
          
          var amount = $(this).find("td input")[0].value;
          var price = $(this).find("td input")[1].value;
+         var total = $(this).find("td input")[2].value;
 
           inventory = parseInt(inventory);
           amount = parseInt(amount);
           price = parseInt(price);
+          total = parseInt(total);
          
          //validate the amount greater than zero to change only the products edited.
          if (amount <= 0) {
@@ -123,11 +175,14 @@
            product.billDate = billDate;
            product.billId = billId;
            product.store = store;
+           product.email = email;
+           product.phone = phone;
            product.id = id;
            product.name = name;
            product.size = size;
            product.amount = amount;
            product.price = price;
+           product.total = total;
            product.storeInventory = inventory;
            product.billType = billType;  
          
@@ -202,6 +257,50 @@
     
     }
 
+    function calculatePrice(e) {
+   
+      // get the id
+      var id = e.id;
+      var productId = id.substring(1, id.length);
+      
+      // get the variables
+      var quantity = $("#q"+productId).val();
+      var price = $("#p"+productId).val();
+      
+      //parse the text
+      quantity = parseFloat(quantity);
+      price = parseFloat(price);
+      
+      var productTotal = quantity * price;
+      
+      $("#t"+productId).val(productTotal);
+
+      calculateTotalPrice();
+      
+   }
+
+   function calculateTotalPrice() {
+   
+      var totalProducts = 0;
+       
+      $(".products_price").each(function(index) {
+        
+        var value = $(this).val();
+        
+        if (!value) {
+          value = 0;
+        }
+        
+        totalProducts += parseFloat(value);
+        
+      });
+      
+      var totalInvoice = numberWithCommas(parseFloat(totalProducts).toFixed(0));
+      
+      $("#total_products").text("$"+totalInvoice);
+   }
+    
+
   function sellOrDonateProductsSuccessHandler(response) {
   
     $("#spinner").hide();
@@ -213,7 +312,7 @@
   function sellOrDonateProductsFailureHandler(response) {
     
     $("#spinner").hide();
-    $("#add_invoice_button").removeAttr('disabled');
+    $("#add_waybills_button").removeAttr('disabled');
     alert("La venta o donación falló.");
   }
 

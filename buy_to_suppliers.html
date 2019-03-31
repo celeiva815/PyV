@@ -19,7 +19,7 @@
             </select> 
             </div>
             <div class="three_columns">
-            <h2>Total productos: <span id="total_products">$0.00</span></h2>
+            <h2>Total Precio: <span id="total_products">$0.00</span></h2>
             <h2>Total flete: <span id="total_shipping">$0.00</span></h2>
             <h2>Total factura: <span id="total_invoice">$0.00</span></h2>
             </div>
@@ -44,8 +44,6 @@
              </tr> 
            </thead>
            <tbody>
-         <?!=getActiveProducts().map(function(d)
-                     { return "<tr> <td class='product_ids'>"+d[0]+"</td><td>"+d[2]+"</td><td>"+d[3]+"</td><td>"+d[10]+"</td>"; }).join('\n');?>
           </tbody>
          </table>
          </div>

@@ -2,6 +2,9 @@
 	
     $(document).ready(function() {
         
+       // set the change event to the store selection
+        $("#suppliers").change(selectStore);        
+        
        $("#spinner").hide();
        
        // color a table row background
@@ -35,6 +38,7 @@
         // set double click event to append the row to products.
         // set click event to set/unset the background
         var id = $(this).find("td:first").html();
+        $(this).find("td:last").css("display","none")
         
          // create the td with the change input on it
          var tdChange = "<td><input id='q"+id+"' class='change_product' onchange='calculateCost(this)' type='number'/></td>";
@@ -84,15 +88,66 @@
         $(this).find("td:last").remove();
         $(this).find("td:last").remove();
         $(this).find("td:last").remove();
+        $(this).find("td:last").css("display","")
         
         // detach the row from the selected products table, remove the last td and append it to the #products table.
-        $(this).detach().clone().appendTo('#products_table').dblclick(appendToSelectedProducts);    
+        $(this).detach().clone().removeClass('invoice_product').appendTo('#products_table').dblclick(appendToSelectedProducts);    
         
         // decrease the amount of selected products
         $("#selected_products_count").text(parseInt($("#selected_products_count").text())-1);
         
         calculateTotalCosts();
     }  
+    
+    function selectStore() {
+    
+        $("#spinner").show();
+     
+        // get the store selected 
+        var storeName = $("#suppliers").find(":selected").text();
+        
+        console.log(storeName);
+        
+        // run the server-side function to get the products.
+        google.script.run.withSuccessHandler(selectStoreSuccessHandler).getSupplierProducts(storeName);     
+    }
+    
+    /**
+* Receives the products found when searching products.
+*/
+  function selectStoreSuccessHandler(products) {
+    
+    $("#spinner").hide();
+     var json = JSON.parse(products);
+     var tbody = $('#products_table tbody');
+     
+     
+     // clear the previous content
+     $(tbody).empty();
+     
+     // add each item to the tbody
+     $.each(json, function(i, product) {
+         
+         var productId = product[0];
+         var productName = product[2];
+         var productSize = product[3];
+         var productInventory = product[10]; 
+         
+         console.log(productId);
+         var tr = "<tr><td class='product_ids'>"+productId+"</td><td>"+productName+"</td><td>"+productSize+"</td><td>"+productInventory+"</td></tr>";
+         
+         tbody.append(tr);
+         
+      });
+      
+        // color a table row background
+        $("#products_table tbody tr").click(setBackground);
+        
+        // remove the .selected class from the row, detach it and append to the #selected_products_table. 
+        $("#products_table tbody tr").dblclick(appendToSelectedProducts);
+      
+  }
+
     
 
  /** 
@@ -149,12 +204,11 @@
          var tdTotalShipping = "<td><input id='s"+productId+"' class='products_shipping' type='number' value='"+productTotalShipping+"' disabled/></td>";
          
          // create the entire tr
-         var tr = "<tr class='invoice_product'><td>" + productId + "</td><td>" + productName + "</td><td>" + productSize + "</td>" + tdChange + tdCost + tdTotalCost + tdShipping + tdTotalShipping + "<td style='display:none;'>" + productAmount + "</td><td style='display:none;'>" + productCost + "</td><td style='display:none;'>" + productShipping + "</td></tr>";
+         var tr = "<tr class='invoice_product searched_products'><td>" + productId + "</td><td>" + productName + "</td><td>" + productSize + "</td>" + tdChange + tdCost + tdTotalCost + tdShipping + tdTotalShipping + "<td style='display:none;'>" + productAmount + "</td><td style='display:none;'>" + productCost + "</td><td style='display:none;'>" + productShipping + "</td></tr>";
          
          // append the tr to the table tbody
          tbody.append(tr);
-         
-         // set the name of the supplier in the combobox
+
          $("#suppliers").val(product[2]);
          
          // set the date 
@@ -167,9 +221,10 @@
       // set the amount of products found
       $("#selected_products_count").text(Object.keys(json).length);
       
-      $("#spinner").hide();
-      
       calculateTotalCosts();
+      selectStore();
+      
+       $("#spinner").hide();
   }
   
   function calculateCost(e) {
@@ -198,8 +253,8 @@
       var productTotal = quantity * cost;
       var productTotalShipping = shipping * productTotal / 100;
       
-      $("#t"+productId).val(productTotal);
-      $("#s"+productId).val(productTotalShipping);
+      $("#t"+productId).val(productTotal.toFixed(0));
+      $("#s"+productId).val(productTotalShipping.toFixed(0));
       
       calculateTotalCosts();
 
@@ -234,11 +289,11 @@
          totalShipping += parseFloat(value);
       });
       
-      var totalInvoice = parseFloat(totalProducts + totalShipping);
+      var totalInvoice = numberWithCommas(parseFloat(totalProducts + totalShipping).toFixed(0));
       
-      $("#total_products").text("$"+totalProducts.toFixed(2));
-      $("#total_shipping").text("$"+totalShipping.toFixed(2));
-      $("#total_invoice").text("$"+totalInvoice.toFixed(2));
+      $("#total_products").text("$"+numberWithCommas(totalProducts.toFixed(0)));
+      $("#total_shipping").text("$"+numberWithCommas(totalShipping.toFixed(0)));
+      $("#total_invoice").text("$"+totalInvoice);
    
    }
   
