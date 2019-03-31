@@ -38,6 +38,7 @@
         // set double click event to append the row to products.
         // set click event to set/unset the background
         var id = $(this).find("td:first").html();
+        $(this).find("td:last").css("display","none")
         
          // create the td with the change input on it
          var tdChange = "<td><input id='q"+id+"' class='change_product' onchange='calculateCost(this)' type='number'/></td>";
@@ -87,6 +88,7 @@
         $(this).find("td:last").remove();
         $(this).find("td:last").remove();
         $(this).find("td:last").remove();
+        $(this).find("td:last").css("display","")
         
         // detach the row from the selected products table, remove the last td and append it to the #products table.
         $(this).detach().clone().removeClass('invoice_product').appendTo('#products_table').dblclick(appendToSelectedProducts);    

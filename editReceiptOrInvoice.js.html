@@ -35,11 +35,14 @@
         // detach the row from the products table, append a td with an input on it and append the row to #selected_products table.
         // set double click event to append the row to products.
         // set click event to set/unset the background        
+        var productId = $(this).find("td:first").html();
+ 
+        var tdAmount = "<td><input id='q"+productId+"' onchange='calculatePrice(this)'  type='number'/></td>"
+        var tdPrice = '<td><input id="p'+productId+'" onchange="calculatePrice(this)" type="number"/></td>'
+        var tdTotal = '</td><td><input id="t'+productId+'" class="products_price" type="number" disabled/></td>'
+        var tdInvoiceAmount = "<td style='display:none;'></td>"
         
-        var tdAmount = "<td><input type='number'/></td>";
-        var tdInvoiceAmount = "<td style='display:none;'>0</td>";
-        
-        $(this).detach().clone().append(tdAmount + tdInvoiceAmount).appendTo('#selected_products_table')
+        $(this).detach().clone().append(tdAmount + tdPrice + tdTotal + tdInvoiceAmount).appendTo('#selected_products_table')
                  .addClass('change_product')
                  .dblclick(appendToProducts)
                  .click(setBackground);

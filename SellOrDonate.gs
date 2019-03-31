@@ -75,12 +75,12 @@ function sellOrDonateProducts(invoice) {
    if (!row) {
 
      row = sheet.getLastRow()
-     var lastId = sheet.getRange(lastRow,1,1,1).getValue(); 
+     var lastId = sheet.getActiveSheet().getRange(row,1,1,1).getValue(); 
      var id = parseInt(lastId) + 1;
      
      values[0] = new Array(id, recipient, 1, email, phone);
      
-     sheet.getRange(row + 1,1,1,values[0].length).setValues(values);
+     sheet.getActiveSheet().getRange(row + 1,1,1,values[0].length).setValues(values);
      MemsheetApp.flush();
      
      return true;    
