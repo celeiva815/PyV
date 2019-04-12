@@ -11,8 +11,10 @@
  * Creates a array with the table information and calls the google app script function to process the spreadsheet
  */
     function undoInvoice() {
-     
+    
      if (validateForm()) {
+     
+        $("#invoice_id_submit").prop("disabled", true );
         // get the invoice id 
         var invoiceId = $("#invoice_id").val();
         // get the invoice bill 
@@ -45,6 +47,7 @@
    
       alert("Ninguna " + getInvoiceBill() + " fue encontrada ni modificada. ¿Estás segura de que la información es correcta?");
       $("#spinner").hide();
+      $("#invoice_id_submit").prop("disabled", false );
       
    }
  }
