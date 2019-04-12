@@ -1,0 +1,104 @@
+<script> 
+	
+    $(document).ready(function() {
+        
+        $("#spinner").hide();
+        
+    });
+        
+   
+ /** 
+ * Creates a array with the table information and calls the google app script function to process the spreadsheet
+ */
+    function undoInvoice() {
+     
+     if (validateForm()) {
+        // get the invoice id 
+        var invoiceId = $("#invoice_id").val();
+        // get the invoice bill 
+        var invoiceBill = getInvoiceBill();
+        
+        // get the date  
+        var invoiceDate = $("#invoice_date").val();
+        
+        $("#spinner").show();
+        
+        // run the server-side function to get the products.
+        google.script.run.withSuccessHandler(undoInvoiceSuccessHandler).undoInvoice(invoiceId, invoiceBill, invoiceDate);
+      }
+  }
+
+/**
+* Receives a response when the waybill was succesfully reversed.
+*/
+  function undoInvoiceSuccessHandler(response) {
+   
+   // get the waybill id 
+   var invoiceId = $("#invoice_id").val();
+   
+   if (response) {
+   
+      alert("La " + getInvoiceBill() + " "+ invoiceId + " fue revertida.");
+      google.script.host.close();
+      
+   } else {
+   
+      alert("Ninguna " + getInvoiceBill() + " fue encontrada ni modificada. ¿Estás segura de que la información es correcta?");
+      $("#spinner").hide();
+      
+   }
+ }
+
+ function getInvoiceBill() {
+  
+        // get the invoice bill 
+        var bill = $('input[name=bill]:checked').val();
+        var invoiceBill = "";
+       
+        if (bill == "receipt") {
+          invoiceBill = "Boleta";
+        }
+      
+        if (bill == "invoice") {
+          invoiceBill = "Factura";
+        }
+      
+        if (bill == "chargeback") {
+          invoiceBill = "Guía de Devolución";
+        }  
+
+     return invoiceBill;
+  }
+  
+   function validateForm() {
+    
+      // get the values
+       var invoiceNumber = $("#invoice_id").val();
+       var invoiceDate = $("#invoice_date").val();
+       var billType = $('input[name=bill]:checked').val();
+ 
+      // validate non-empty and greater than zero waybill number.
+      if (!invoiceNumber) {
+         
+         alert("Debe ingresar un número de Factura, Boleta o Devolución.");
+         return false;
+      }
+      
+      // validate non-empty and greater than zero waybill date.
+      if (!invoiceDate || invoiceDate <= 0) {
+         
+         alert("Debe seleccionar una fecha para la Factura, Boleta o Devolución.");
+         return false;
+      }
+
+      // validate non-empty bill type.
+      if (!billType) {
+         alert("Debe seleccionar si es boleta, factura o guía de devolución.");
+         return false;
+      }
+      
+      return true;
+    
+    }
+
+</script>

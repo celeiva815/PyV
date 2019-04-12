@@ -189,8 +189,6 @@ function resetNotSoldWaybillProduct(product, sheet, productIdColumn) {
         sheet.getCell(i+1,5).setValue("");
         sheet.getCell(i+1,10).setValue("No Vendido");
         sheet.getCell(i+1,14).setValue("");
-        sheet.getCell(i+1,15).setValue("");
-        sheet.getCell(i+1,16).setValue("");
       
       // If the billtype is a chargeback, we have to reset the product inventory for a while.
       if (product.billType == "chargeback") {
