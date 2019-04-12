@@ -2,7 +2,6 @@
 <!-- styles --> 
 <?!=HtmlService.createHtmlOutputFromFile('styles.css').getContent();?> 
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
-
 <div class="content"> 
     <div class ="block">
         <form action="javascript:undoInvoice()">
@@ -13,11 +12,9 @@
             <input type="radio" name="bill" value="chargeback"> Guía de Devolución<br>
             <label for="code">Fecha:</label>
             <input id="invoice_date" class="current_date" type="date"/>
-            <input id="invoice_id_submit" type="submit" value="Buscar">
+            <input id="invoice_id_submit" type="submit" value="Deshacer"/>
+            <img id="spinner" src="https://drive.google.com/uc?export=download&amp;id=1d1UkmZaPE_r37hGwCdxtodrgbEfFm12W" style="width: 50px; position: absolute;"/>
           </form>  
-        <img id="spinner" src="https://drive.google.com/uc?export=download&amp;id=1d1UkmZaPE_r37hGwCdxtodrgbEfFm12W" style="width: 50px; position: absolute;">
-        </form> 
-        <br>
     </div>
 </div> 
 <!-- javascript. --> <?!=HtmlService.createHtmlOutputFromFile('undoInvoice.js').getContent();?>
