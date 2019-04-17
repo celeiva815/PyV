@@ -244,9 +244,9 @@
       shipping = parseFloat(shipping);
       
       //validate percentage
-      if (shipping < 0 || shipping > 100) {
+      if (shipping < 0) {
       
-          alert("El % flete debe ser entre 0 y 100");
+          alert("El % flete debe ser mayor a 0");
           return;
       }
       
@@ -374,10 +374,10 @@
          }
          
          // validate the cost greater than zero
-         if (shipping < 0 || shipping > 100) {
+         if (shipping < 0) {
          
             $("#edit_waybill_button").removeAttr('disabled');
-            alert("El % flete ingresado de " + name + " " + size + " deber estar entre 0 y 100.");
+            alert("El % flete ingresado de " + name + " " + size + " debe ser mayor a 0.");
             areProductsValidated = false;
             return false;
          }

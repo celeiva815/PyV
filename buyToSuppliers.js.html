@@ -147,12 +147,13 @@
          var cost = $(this).find("td input")[1].value;
          var shipping = $(this).find("td input")[3].value;
 
-          var inventoryValue = parseInt(inventory);
-          var amountVal = parseInt(amount);
-          var costVal = parseInt(cost);
-         
+          inventory = parseInt(inventory);
+          amount = parseInt(amount);
+          cost = parseInt(cost);
+          shipping = parseFloat(shipping);
+          
          //validate the amount greater than zero
-         if (amountVal <= 0) {
+         if (!amount || amount <= 0) {
             
             $("#add_invoice_button").removeAttr('disabled');
             alert("La cantidad ingresada de " + name + " " + size + " debe ser mayor a 0.");
@@ -161,12 +162,18 @@
          }
          
          // validate the cost greater than zero
-         if (costVal <= 0) {
+         if (!cost || cost <= 0) {
          
             $("#add_invoice_button").removeAttr('disabled');
             alert("La costo ingresado de " + name + " " + size + " deber ser mayor a 0.");
             areProductsValidated = false;
             return false;
+         }
+         
+         // validate the cost greater than zero
+         if (!shipping) {  
+            shipping = 0.0;
+         
          }
          
          var product = {};

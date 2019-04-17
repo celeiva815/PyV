@@ -75,11 +75,10 @@ function addSupplierInvoice(invoice) {
    
     var product = invoice[i];
     
-    var totalCost = product.amount * product.cost;
-    var totalShipping = (totalCost * product.shipping) / 100;
+    var totalCost = parseFloat(product.amount * product.cost);
+    var totalShipping = parseFloat(totalCost * product.shipping) / 100.0;
     
-    
-    values[i] = new Array(product.invoiceNumber, product.invoiceDate, product.store,"",product.id,product.name,product.size,product.amount,product.cost,totalCost,product.shipping, totalShipping);
+    values[i] = new Array(product.invoiceNumber, product.invoiceDate, product.store,"",product.id,product.name,product.size,product.amount,product.cost || 0,totalCost,product.shipping || 0, totalShipping);
     
     // decrease stock of the product
     increaseProductStock(product.id, product.amount, productIdColumn);
