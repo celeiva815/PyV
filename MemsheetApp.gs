@@ -112,25 +112,14 @@ MemsheetApp = {
       },
       getCell: function(row, col) {
         
-        if (!row) {
-          row = col.substring(1);
-          col = col.substring(0, 1);
-        }
         if (isNaN(row)) {
-          throw new Error("Multicell ranges not supported unless separating col and row in separate parameters");
+          throw new Error("Fila inválida: " + row);
+        }
+        if (isNaN(col)) {
+          throw new Error("Columna inválida: " + row);
         }
         
-        var c = col;
-        if (typeof col  === "string"){
-          c = col.charCodeAt(0) - 65;
-          // this supports 2 letters in col
-          if (col.length > 1) {
-            //"AB": 1 * (26) + 1 = 27 
-            c = ( (c + 1) * ("Z".charCodeAt(0) - 64)) + (col.charCodeAt(1) - 65);
-          }
-        }
-        
-        c = parseInt(col)-1;
+        var c = parseInt(col)-1;
         if (this.maxCol < c) {
           this.maxCol = c;
         }
