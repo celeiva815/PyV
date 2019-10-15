@@ -60,7 +60,7 @@ function addWaybill(waybill) {
     var column = productSheet.getColumn(11);
     console.log(productSheet);
     productSheet.getActiveSheet().getRange(1, 11, column.length, 1).setValues(column);
-    //MemsheetApp.flush();
+    // MemsheetApp.flush();
     console.timeEnd("write inventory");
   
     console.timeEnd("total process");

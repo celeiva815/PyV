@@ -226,20 +226,21 @@ function decreaseProductStock(productId, amount, productIdColumn) {
 function increaseProductStock(productId, amount, productIdColumn) {
  
     var inventorySheet = MemsheetApp.getSheet("Productos");
-    var stockRowCell = columnBinarySearch(productIdColumn, productId) + 1;
+    var stockRowCell = findStockRowCell(productId);    
+    console.log("fila del stock " + productId + ": " + stockRowCell)
     
     var stock = inventorySheet.getCell(stockRowCell, 11).getValue();
-  
+
     // if the stock is null or empty, set a zero instead.
     if (!stock) {
        stock = 0;
     }
     
     var newStock = (parseInt(stock) + parseInt(amount));
-    
+    console.log("stock " + productId + ": actual= " + stock + "/cambio= " + amount + "/nuevo: " + newStock);
+  
     // set the new stock, substracting the amount
     inventorySheet.getCell(stockRowCell,11).setValue(newStock);
-  
 }
 
 /**
@@ -247,14 +248,15 @@ function increaseProductStock(productId, amount, productIdColumn) {
 */
 function findStockRowCell(productId) {
   
-  console.time("columna ID");
+  console.time("Celda del inventario " + productId);
   var sheet = SpreadsheetApp.getActive().getSheetByName("Productos");
-  var data = sheet.getRange("A:A").getValues();
-  console.timeEnd("columna ID");
+  var lastRow = getLastRowIndex(sheet);
+  var data = sheet.getRange(1, 1, lastRow + 1, 1).getValues();
   
-  console.time("binary");
-  var rowPosition = 
-  console.timeEnd("binary");  
+  console.log(data);
+  
+  var rowPosition = columnBinarySearch(data, productId) + 1;
+  console.timeEnd("Celda del inventario " + productId);  
   
   return rowPosition;
 }
